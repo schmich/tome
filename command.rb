@@ -22,7 +22,8 @@ private
     begin
       handle_command(args)
     rescue => error
-      puts error.message
+      has_message = !error.nil? && !error.message.nil? && !error.message.empty?
+      puts error.message if has_message
       return 2
     end
 
@@ -44,7 +45,7 @@ private
         args.shift
         get(args)
 
-      when /\A(del|delete|rm)\z/i
+      when /\A(del|delete|rm|remove)\z/i
         args.shift
         delete(args)
     end
@@ -80,6 +81,10 @@ private
       when 3
         opts.merge!(parse_username_domain(args[0]))
         opts.merge!(:password => args[1], :nick => args[2])
+
+      else
+        puts $set_usage
+        raise 
     end
 
     ward = get_ward()
@@ -96,7 +101,8 @@ private
 
   def get(args)
     if args.length != 1
-      raise 'Invalid argument.'
+      puts $get_usage
+      raise
     end
 
     # ward get fb
@@ -116,7 +122,8 @@ private
 
   def delete(args)
     if args.length != 1
-      raise 'Invalid argument.'
+      puts $delete_usage
+      raise
     end
 
     # ward del fb
@@ -229,7 +236,7 @@ private
   end
 
   def prompt_nick
-    print 'Alias (optional): '
+    print 'Nickname (optional): '
     nick = $stdin.gets.strip
     if !nick.empty?
       { :nick => nick }
@@ -267,16 +274,64 @@ private
   def store_filename
     File.join(Dir.home, '.ward')
   end
+end
 
-  # TODO: Fix
-  $usage = <<USAGE
-  Usage: ward <command> [options]
-    
-    ward new
-    ward set
-    ward get
-    ward del
-    ward help
+# TODO: Complete these.
+$usage = <<USAGE
+Usage: ward <command> [options]
+
+  ward new
+  ward set
+  ward get
+  ward del
+  ward help
 USAGE
 
-end
+$set_usage = <<USAGE
+Usage: ward set [options]
+
+  ward set
+  ward set [user@]<domain> [password]
+  ward set [user@]<domain> <password> <nickname>
+
+Examples:
+
+  ward set gmail.com
+  ward set gmail.com p4ssw0rd
+  ward set gmail.com p4ssw0rd gmail
+  ward set chris@gmail.com
+  ward set chris@gmail.com p4ssw0rd
+  ward set chris@gmail.com p4ssw0rd gmail
+
+Alias: set, new, add
+USAGE
+
+$get_usage = <<USAGE
+Usage: ward get <options>
+
+  ward get <nickname>
+  ward get [user@]<domain>
+
+Examples:
+
+  ward get gmail
+  ward get gmail.com
+  ward get chris@gmail.com
+
+Alias: get, show
+USAGE
+
+$delete_usage = <<USAGE
+Usage: ward del <options>
+
+  ward del <nickname>
+  ward del [user@]<domain>
+
+Examples:
+
+  ward del gmail
+  ward del gmail.com
+  ward del chris@gmail.com
+
+Alias: del, delete, rm, remove
+USAGE
