@@ -156,6 +156,7 @@ private
     store = load_store()
     yield store
     store = nil
+    GC.start
   end
 
   def write_store()
@@ -163,6 +164,7 @@ private
     save = yield store
     save_store(store)
     store = nil
+    GC.start
   end
 
   def format_store_key(opts)
