@@ -112,21 +112,24 @@ private
       @store = {}
     else
       encrypted_yaml = File.open(@store_filename, 'rb') { |file| file.read }
-
-      begin
-        yaml = Crypt.decrypt(
-          :value => encrypted_yaml,
-          :password => @master_password
-        )
-      rescue ArgumentError
+      if encrypted_yaml.length == 0
         @store = {}
-      rescue OpenSSL::Cipher::CipherError
-        raise MasterPasswordError
-      end
+      else
+        begin
+          yaml = Crypt.decrypt(
+            :value => encrypted_yaml,
+            :password => @master_password
+          )
+        rescue ArgumentError
+          @store = {}
+        rescue OpenSSL::Cipher::CipherError
+          raise MasterPasswordError
+        end
 
-      @store = YAML.load(yaml)
-      if !@store
-        @store = {}
+        @store = YAML.load(yaml)
+        if !@store
+          @store = {}
+        end
       end
     end
   end
