@@ -1,6 +1,9 @@
 require 'io/console'
 require 'ward'
 
+class CommandError < RuntimeError
+end
+
 class WardCommand
   private_class_method :new 
 
@@ -21,9 +24,7 @@ private
 
     begin
       handle_command(args)
-    rescue => error
-      has_message = !error.nil? && !error.message.nil? && !error.message.empty?
-      puts error.message if has_message
+    rescue CommandError
       return 2
     end
 
@@ -56,7 +57,7 @@ private
 
     if args.length > 3
       puts $set_usage
-      raise
+      raise CommandError
     end
     
      ward = get_ward()
@@ -104,7 +105,7 @@ private
   def get(args)
     if args.length != 1
       puts $get_usage
-      raise
+      raise CommandError
     end
 
     # ward get fb
@@ -125,7 +126,7 @@ private
   def delete(args)
     if args.length != 1
       puts $delete_usage
-      raise
+      raise CommandError
     end
 
     # ward del fb
