@@ -111,7 +111,7 @@ private
     if !File.exist?(@store_filename)
       @store = {}
     else
-      encrypted_yaml = File.read(@store_filename)
+      encrypted_yaml = File.open(@store_filename, 'rb') { |file| file.read }
 
       begin
         key = Digest::SHA256.hexdigest(@master_password)
