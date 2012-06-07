@@ -9,11 +9,12 @@ class Ward
   def initialize(store_filename, master_password)
     @store_filename = store_filename
     @master_password = master_password
-    load_store()
   end
 
   def set(opts = {})
     return if opts.nil? || opts.empty?
+
+    store = load_store()
 
     username = opts[:username]
     domain = opts[:domain]
@@ -23,16 +24,16 @@ class Ward
     key = format_store_key(opts)
     return if key.nil?
 
-    created = !@store.include?(key)
+    created = !store.include?(key)
 
     # TODO: Enforce nick uniqueness.
-    @store[key] = {}
-    @store[key]['username'] = username
-    @store[key]['domain'] = domain
-    @store[key]['password'] = password
-    @store[key]['nick'] = nick
+    store[key] = {}
+    store[key]['username'] = username
+    store[key]['domain'] = domain
+    store[key]['password'] = password
+    store[key]['nick'] = nick
 
-    save_store()
+    save_store(store)
 
     return created
   end
@@ -40,43 +41,47 @@ class Ward
   def get(opts = {})
     return nil if opts.nil? || opts.empty?
 
+    store = load_store()
+
     if !opts[:nick].nil?
-      get_by_nick(opts)
+      get_by_nick(store, opts)
     else
-      get_by_username_domain(opts)
+      get_by_username_domain(store, opts)
     end
   end
 
   def delete(opts = {})
     return if opts.nil? || opts.empty?
 
+    store = load_store()
+
     if !opts[:nick].nil?
-      deleted = delete_by_nick(opts)
+      deleted = delete_by_nick(store, opts)
     else
-      deleted = delete_by_username_domain(opts)
+      deleted = delete_by_username_domain(store, opts)
     end
 
-    save_store()
+    save_store(store)
 
     return deleted
   end
 
 private
-  def get_by_username_domain(opts)
+  def get_by_username_domain(store, opts)
     key = format_store_key(opts)
     return nil if key.nil?
 
-    info = @store[key]
+    info = store[key]
     return nil if info.nil?
 
     return info['password']
   end
 
-  def get_by_nick(opts)
+  def get_by_nick(store, opts)
     nick = opts[:nick]
     return nil if nick.nil?
 
-    match = @store.find { |key, info|
+    match = store.find { |key, info|
       !info['nick'].nil? && info['nick'].casecmp(nick) == 0
     }
 
@@ -85,22 +90,22 @@ private
     return match['password']
   end
 
-  def delete_by_username_domain(opts)
+  def delete_by_username_domain(store, opts)
     key = format_store_key(opts)
     return false if key.nil?
 
-    same = @store.reject! { |entry_key, info|
+    same = store.reject! { |entry_key, info|
       entry_key.casecmp(key) == 0
     }.nil?
 
     return !same
   end
 
-  def delete_by_nick(opts)
+  def delete_by_nick(store, opts)
     nick = opts[:nick]
     return nil if nick.nil?
 
-    same = @store.reject! { |key, info|
+    same = store.reject! { |key, info|
       !info['nick'].nil? && info['nick'].casecmp(nick) == 0
     }.nil?
 
@@ -109,33 +114,29 @@ private
   
   def load_store()
     if !File.exist?(@store_filename)
-      @store = {}
+      return {}
     else
       encrypted_yaml = File.open(@store_filename, 'rb') { |file| file.read }
-      if encrypted_yaml.length == 0
-        @store = {}
-      else
-        begin
-          yaml = Crypt.decrypt(
-            :value => encrypted_yaml,
-            :password => @master_password
-          )
-        rescue ArgumentError
-          @store = {}
-        rescue OpenSSL::Cipher::CipherError
-          raise MasterPasswordError
-        end
+      return {} if encrypted_yaml.length == 0
 
-        @store = YAML.load(yaml)
-        if !@store
-          @store = {}
-        end
+      begin
+        yaml = Crypt.decrypt(
+          :value => encrypted_yaml,
+          :password => @master_password
+        )
+      rescue ArgumentError
+        return {}
+      rescue OpenSSL::Cipher::CipherError
+        raise MasterPasswordError
       end
+
+      store = YAML.load(yaml)
+      return store ? store : {}
     end
   end
 
-  def save_store()
-    yaml = YAML.dump(@store)
+  def save_store(store)
+    yaml = YAML.dump(store)
 
     encrypted_yaml = Crypt.encrypt(
       :value => yaml, 

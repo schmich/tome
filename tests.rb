@@ -63,13 +63,6 @@ class TestWard < Test::Unit::TestCase
     assert_nil(get)
   end
 
-  def test_set_reopen_get
-    @ward.set(:domain => $dom, :password => $pw)
-    @new_ward = new_ward()
-    get = @new_ward.get(:domain => $dom)
-    assert_equal(get, $pw)
-  end
-
   def test_set_nick
   end
 
