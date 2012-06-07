@@ -21,7 +21,7 @@ class TestWard < Test::Unit::TestCase
   def test_set_get
     @ward.set($dph)
     get = @ward.get($dh)
-    assert_equal(get, $p)
+    assert_equal($p, get)
   end
 
   def test_set_update
@@ -52,11 +52,22 @@ class TestWard < Test::Unit::TestCase
     created = @ward.set($dph)
     assert(created)
     get = @ward.get($dh)
-    assert_equal(get, $p)
+    assert_equal($p, get)
     deleted = @ward.delete($dh)
     assert(deleted)
     get = @ward.get($dh)
     assert_nil(get)
+  end
+
+  def test_many_set_get
+    created = @ward.set($dph)
+    assert(created)
+    created = @ward.set($d2p2h)
+    assert(created)
+    get = @ward.get($dh)
+    assert_equal($p, get)
+    get = @ward.get($d2h)
+    assert_equal($p2, get)
   end
 
   def test_set_nick
@@ -85,6 +96,12 @@ class TestWard < Test::Unit::TestCase
   $dh = { :domain => $d }
   $ph = { :password => $p }
   $dph = $dh.merge($ph)
+
+  $d2 = 'baz.com'
+  $d2h = { :domain => $d2 }
+  $p2 = 'quux'
+  $p2h = { :password => $p2 }
+  $d2p2h = $d2h.merge($p2h)
 end
 
 class TestCommand < Test::Unit::TestCase
