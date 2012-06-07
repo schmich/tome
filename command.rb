@@ -8,11 +8,8 @@ class WardCommand
   private_class_method :new 
 
   def self.run(args)
-    command = new(args)
-  end
-
-  def initialize(args)
-    exit(run(args))
+    command = new()
+    return command.send(:run, args)
   end
 
 private

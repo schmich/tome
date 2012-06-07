@@ -1,3 +1,3 @@
 require 'command'
 
-WardCommand.run(ARGV)
+exit(WardCommand.run(ARGV))
