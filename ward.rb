@@ -116,7 +116,7 @@ private
       begin
         yaml = Crypt.decrypt(
           :value => encrypted_yaml,
-          :key => crypt_key(@master_password)
+          :password => @master_password
         )
       rescue ArgumentError
         @store = {}
@@ -136,7 +136,7 @@ private
 
     encrypted_yaml = Crypt.encrypt(
       :value => yaml, 
-      :key => crypt_key(@master_password)
+      :password => @master_password
     )
 
     File.open(@store_filename, 'wb') do |out|
@@ -155,14 +155,5 @@ private
     else
       "#{username}@#{domain}"
     end
-  end
-
-  def crypt_key(password)
-    key = password
-    100000.times {
-      key = Digest::SHA256.hexdigest(key)
-    }
-
-    return key
   end
 end
