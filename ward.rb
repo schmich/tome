@@ -11,6 +11,8 @@ class Ward
     @master_password = master_password
   end
 
+  # TODO: Return a value or throw an exception
+  # if parameters are invalid.
   def set(opts = {})
     return if opts.nil? || opts.empty?
 

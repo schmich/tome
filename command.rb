@@ -7,13 +7,15 @@ end
 class WardCommand
   private_class_method :new 
 
-  def self.run(args)
+  def self.run(store_filename, args)
     command = new()
-    return command.send(:run, args)
+    return command.send(:run, store_filename, args)
   end
 
 private
-  def run(args)
+  def run(store_filename, args)
+    @store_filename = store_filename
+    
     if args.length < 1
       usage
       return 1
@@ -57,7 +59,7 @@ private
       raise CommandError
     end
     
-     ward = get_ward()
+     ward = new_ward()
 
     case args.length
       # ward new
@@ -110,7 +112,7 @@ private
     # ward get foo@bar.com
     id = parse_id(args[0])
 
-    ward = get_ward()
+    ward = new_ward()
     password = ward.get(id)
 
     if password.nil?
@@ -131,7 +133,7 @@ private
     # ward del foo@bar.com
     id = parse_id(args[0])
 
-    ward = get_ward()
+    ward = new_ward()
     deleted = ward.delete(id)
 
     if deleted
@@ -254,11 +256,11 @@ private
     }
   end
 
-  def get_ward
+  def new_ward
     begin
       print 'Master password: '
       master_password = get_password()
-      ward = Ward.new(store_filename(), master_password)
+      ward = Ward.new(@store_filename, master_password)
     rescue MasterPasswordError
       puts 'Incorrect master password.'
       retry
@@ -269,10 +271,6 @@ private
 
   def usage
     $stderr.puts $usage
-  end
-
-  def store_filename
-    File.join(Dir.home, '.ward')
   end
 end
 
