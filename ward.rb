@@ -10,6 +10,7 @@ class Ward
     @store_filename = store_filename
     @master_password = master_password
     @key_stretch = key_stretch
+    authenticate()
   end
 
   # TODO: Return a value or throw an exception
@@ -183,5 +184,11 @@ private
     else
       "#{username}@#{domain}"
     end
+  end
+
+  def authenticate
+    # Force a read.
+    # If the master password is invalid, the access exception will propagate.
+    read_store { |store| }
   end
 end
