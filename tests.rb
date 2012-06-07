@@ -6,15 +6,11 @@ class TestWard < Test::Unit::TestCase
   def setup
     @temp_store = Tempfile.new('ward')
     @master_password = 'test'
-    @ward = new_ward()
+    @ward = Ward.new(@temp_store.path, @master_password)
   end
 
   def teardown
     @temp_store.delete rescue nil
-  end
-
-  def new_ward
-    Ward.new(@temp_store.path, @master_password)
   end
 
   def test_set
