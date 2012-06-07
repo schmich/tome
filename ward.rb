@@ -1,11 +1,3 @@
-# TODO
-# Option to allow/disallow enumeration (be more strict).
-# Enforce nickname format (letters, underscore, number).
-# More command-line verification.
-# Better prompting for initial master password.
-# Allow specification of master password on command-line, e.g. 'ward get gmail.com -- p4ssw0rd'
-# Tests.
-
 require 'yaml'
 require 'fileutils'
 require 'crypt'
