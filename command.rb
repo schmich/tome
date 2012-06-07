@@ -280,7 +280,6 @@ end
 $usage = <<USAGE
 Usage: ward <command> [options]
 
-  ward new
   ward set
   ward get
   ward del
