@@ -11,11 +11,9 @@ class Crypt
 
 private
   def self.crypt(method, opts)
-    return nil if opts.nil? || opts.empty?
-    return nil if opts[:value].nil?
-    return nil if opts[:password].nil?
+    return nil if opts.nil? || opts.empty? || opts[:value].nil? || opts[:password].nil? || opts[:key_stretch].nil?
 
-    key = crypt_key(opts[:password])
+    key = crypt_key(opts[:password], opts[:key_stretch])
     value = opts[:value]
 
     cipher = OpenSSL::Cipher::Cipher.new('aes-256-cbc')
@@ -27,9 +25,9 @@ private
     return result
   end
 
-  def self.crypt_key(password)
+  def self.crypt_key(password, key_stretch)
     key = password
-    250000.times {
+    key_stretch.times {
       key = Digest::SHA256.hexdigest(key)
     }
 

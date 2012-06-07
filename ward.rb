@@ -6,9 +6,10 @@ class MasterPasswordError < RuntimeError
 end
 
 class Ward
-  def initialize(store_filename, master_password)
+  def initialize(store_filename, master_password, key_stretch = 250_000)
     @store_filename = store_filename
     @master_password = master_password
+    @key_stretch = key_stretch
   end
 
   # TODO: Return a value or throw an exception
@@ -128,7 +129,8 @@ private
       begin
         yaml = Crypt.decrypt(
           :value => encrypted_yaml,
-          :password => @master_password
+          :password => @master_password,
+          :key_stretch => @key_stretch
         )
       rescue ArgumentError
         return {}
@@ -146,7 +148,8 @@ private
 
     encrypted_yaml = Crypt.encrypt(
       :value => yaml, 
-      :password => @master_password
+      :password => @master_password,
+      :key_stretch => @key_stretch
     )
 
     File.open(@store_filename, 'wb') do |out|
