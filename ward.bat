@@ -1,2 +1,2 @@
 @echo off
-ruby -I. ward.rb %*
+ruby -I. main.rb %*
