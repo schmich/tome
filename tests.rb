@@ -1,4 +1,5 @@
 require 'ward'
+require 'command'
 require 'test/unit'
 require 'tempfile'
 
@@ -6,7 +7,7 @@ class TestWard < Test::Unit::TestCase
   def setup
     @temp_store = Tempfile.new('ward')
     @master_password = 'test'
-    @ward = Ward.new(@temp_store.path, @master_password)
+    @ward = Ward.new(@temp_store.path, @master_password, 10)
   end
 
   def teardown
@@ -106,11 +107,18 @@ end
 
 class TestCommand < Test::Unit::TestCase
   def setup
+    @temp_store = Tempfile.new('command')
+    @master_password = 'test'
   end
 
   def teardown
+    @temp_store.delete rescue nil
   end
 
   def test_set
+  end
+
+  def cmd(*args)
+    WardCommand.run(@temp_store.path, args)
   end
 end
