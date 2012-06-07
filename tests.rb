@@ -18,48 +18,48 @@ class TestWard < Test::Unit::TestCase
   end
 
   def test_set
-    created = @ward.set(:domain => $dom, :password => $pw)
+    created = @ward.set($dompwh)
     assert(created)
   end
 
   def test_set_get
-    @ward.set(:domain => $dom, :password => $pw)
-    get = @ward.get(:domain => $dom)
+    @ward.set($dompwh)
+    get = @ward.get($domh)
     assert_equal(get, $pw)
   end
 
   def test_set_update
-    created = @ward.set(:domain => $dom, :password => $pw)
+    created = @ward.set($dompwh)
     assert(created)
-    created = @ward.set(:domain => $dom, :password => $pw)
+    created = @ward.set($dompwh)
     assert(!created)
   end
 
   def test_get_fail
-    password = @ward.get(:domain => $dom)
+    password = @ward.get($domh)
     assert_nil(password)
   end
 
   def test_set_delete
-    created = @ward.set(:domain => $dom, :password => $pw)
+    created = @ward.set($dompwh)
     assert(created)
-    deleted = @ward.delete(:domain => $dom)
+    deleted = @ward.delete($domh)
     assert(deleted)
   end
 
   def test_delete_fail
-    deleted = @ward.delete(:domain => $dom)
+    deleted = @ward.delete($domh)
     assert(!deleted)
   end
 
   def test_set_delete_get_fail
-    created = @ward.set(:domain => $dom, :password => $pw)
+    created = @ward.set($dompwh)
     assert(created)
-    get = @ward.get(:domain => $dom)
+    get = @ward.get($domh)
     assert_equal(get, $pw)
-    deleted = @ward.delete(:domain => $dom)
+    deleted = @ward.delete($domh)
     assert(deleted)
-    get = @ward.get(:domain => $dom)
+    get = @ward.get($domh)
     assert_nil(get)
   end
 
@@ -86,4 +86,18 @@ class TestWard < Test::Unit::TestCase
 
   $dom = 'foo.com'
   $pw = 'bar'
+  $domh = { :domain => $dom }
+  $pwh = { :password => $pw }
+  $dompwh = $domh.merge($pwh)
+end
+
+class TestCommand < Test::Unit::TestCase
+  def setup
+  end
+
+  def teardown
+  end
+
+  def test_set
+  end
 end
