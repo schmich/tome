@@ -14,26 +14,26 @@ class Ward
   def set(opts = {})
     return if opts.nil? || opts.empty?
 
-    store = load_store()
+    created = false
 
-    username = opts[:username]
-    domain = opts[:domain]
-    password = opts[:password]
-    nick = opts[:nick]
+    write_store do |store|
+      username = opts[:username]
+      domain = opts[:domain]
+      password = opts[:password]
+      nick = opts[:nick]
 
-    key = format_store_key(opts)
-    return if key.nil?
+      key = format_store_key(opts)
+      return if key.nil?
 
-    created = !store.include?(key)
+      created = !store.include?(key)
 
-    # TODO: Enforce nick uniqueness.
-    store[key] = {}
-    store[key]['username'] = username
-    store[key]['domain'] = domain
-    store[key]['password'] = password
-    store[key]['nick'] = nick
-
-    save_store(store)
+      # TODO: Enforce nick uniqueness.
+      store[key] = {}
+      store[key]['username'] = username
+      store[key]['domain'] = domain
+      store[key]['password'] = password
+      store[key]['nick'] = nick
+    end
 
     return created
   end
@@ -41,27 +41,31 @@ class Ward
   def get(opts = {})
     return nil if opts.nil? || opts.empty?
 
-    store = load_store()
+    password = nil
 
-    if !opts[:nick].nil?
-      get_by_nick(store, opts)
-    else
-      get_by_username_domain(store, opts)
+    read_store do |store|
+      if !opts[:nick].nil?
+        password = get_by_nick(store, opts)
+      else
+        password = get_by_username_domain(store, opts)
+      end
     end
+
+    return password
   end
 
   def delete(opts = {})
     return if opts.nil? || opts.empty?
 
-    store = load_store()
+    deleted = false
 
-    if !opts[:nick].nil?
-      deleted = delete_by_nick(store, opts)
-    else
-      deleted = delete_by_username_domain(store, opts)
+    write_store do |store|
+      if !opts[:nick].nil?
+        deleted = delete_by_nick(store, opts)
+      else
+        deleted = delete_by_username_domain(store, opts)
+      end
     end
-
-    save_store(store)
 
     return deleted
   end
@@ -146,6 +150,19 @@ private
     File.open(@store_filename, 'wb') do |out|
       out.write(encrypted_yaml)
     end
+  end
+
+  def read_store()
+    store = load_store()
+    yield store
+    store = nil
+  end
+
+  def write_store()
+    store = load_store()
+    save = yield store
+    save_store(store)
+    store = nil
   end
 
   def format_store_key(opts)
