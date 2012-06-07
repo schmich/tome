@@ -54,6 +54,13 @@ private
   def set(args)
     opts = {}
 
+    if args.length > 3
+      puts $set_usage
+      raise
+    end
+    
+     ward = get_ward()
+
     case args.length
       # ward new
       # ward set
@@ -81,13 +88,8 @@ private
       when 3
         opts.merge!(parse_username_domain(args[0]))
         opts.merge!(:password => args[1], :nick => args[2])
-
-      else
-        puts $set_usage
-        raise 
     end
 
-    ward = get_ward()
     created = ward.set(opts)
 
     if created
