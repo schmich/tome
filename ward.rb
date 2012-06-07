@@ -20,7 +20,7 @@ class Ward
     password = opts[:password]
     nick = opts[:nick]
 
-    key = format_key(opts)
+    key = format_store_key(opts)
     return if key.nil?
 
     created = !@store.include?(key)
@@ -63,7 +63,7 @@ class Ward
 
 private
   def get_by_username_domain(opts)
-    key = format_key(opts)
+    key = format_store_key(opts)
     return nil if key.nil?
 
     info = @store[key]
@@ -86,7 +86,7 @@ private
   end
 
   def delete_by_username_domain(opts)
-    key = format_key(opts)
+    key = format_store_key(opts)
     return false if key.nil?
 
     same = @store.reject! { |entry_key, info|
@@ -114,10 +114,9 @@ private
       encrypted_yaml = File.open(@store_filename, 'rb') { |file| file.read }
 
       begin
-        key = Digest::SHA256.hexdigest(@master_password)
         yaml = Crypt.decrypt(
           :value => encrypted_yaml,
-          :key => key
+          :key => crypt_key(@master_password)
         )
       rescue ArgumentError
         @store = {}
@@ -134,10 +133,10 @@ private
 
   def save_store()
     yaml = YAML.dump(@store)
-    key = Digest::SHA256.hexdigest(@master_password)
+
     encrypted_yaml = Crypt.encrypt(
       :value => yaml, 
-      :key => key
+      :key => crypt_key(@master_password)
     )
 
     File.open(@store_filename, 'wb') do |out|
@@ -145,7 +144,7 @@ private
     end
   end
 
-  def format_key(opts)
+  def format_store_key(opts)
     username = opts[:username]
     domain = opts[:domain]
 
@@ -156,5 +155,14 @@ private
     else
       "#{username}@#{domain}"
     end
+  end
+
+  def crypt_key(password)
+    key = password
+    100000.times {
+      key = Digest::SHA256.hexdigest(key)
+    }
+
+    return key
   end
 end
