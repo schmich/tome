@@ -55,7 +55,7 @@ private
     opts = {}
 
     if args.length > 3
-      puts $set_usage
+      $stderr.puts $set_usage
       raise CommandError
     end
     
@@ -93,17 +93,17 @@ private
     created = ward.set(opts)
 
     if created
-      print 'Created '
+      $stdout.print 'Created '
     else
-      print 'Updated '
+      $stdout.print 'Updated '
     end
     
-    puts "password for #{format_id(opts)}."
+    $stdout.puts "password for #{format_id(opts)}."
   end
 
   def get(args)
     if args.length != 1
-      puts $get_usage
+      $stderr.puts $get_usage
       raise CommandError
     end
 
@@ -118,13 +118,13 @@ private
     if password.nil?
       $stderr.puts "No password for #{format_id(id)}."
     else
-      print password
+      $stdout.print password
     end
   end
 
   def delete(args)
     if args.length != 1
-      puts $delete_usage
+      $stderr.puts $delete_usage
       raise CommandError
     end
 
@@ -137,9 +137,9 @@ private
     deleted = ward.delete(id)
 
     if deleted
-      puts "Deleted password for #{format_id(id)}."
+      $stdout.puts "Deleted password for #{format_id(id)}."
     else
-      puts "No password for #{format_id(id)}."
+      $stdout.puts "No password for #{format_id(id)}."
     end
   end
 
@@ -204,7 +204,7 @@ private
   end
 
   def prompt_domain
-    print 'Domain: '
+    $stderr.print 'Domain: '
     { :domain => $stdin.gets.strip }
   end
 
