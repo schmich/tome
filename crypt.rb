@@ -26,7 +26,9 @@ private
   end
 
   def self.crypt_key(password, key_stretch)
-    key = password
+    salt = 'c2e15556-fdcd-4409-b2ec-d3ae4fa1d739'
+    
+    key = salt + password
     key_stretch.times {
       key = Digest::SHA256.hexdigest(key)
     }
