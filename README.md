@@ -26,7 +26,11 @@ Lightweight password manager with a humane command-line interface.
 
 #### Under construction.
 * Encryption: AES-256 CBC using Ruby OpenSSL library.
-* Key derivation: SHA-256 hash on master password with 250K key stretch iterations.
+* Key derivation:
+ * PBKDF2/HMAC-SHA-512 on master password.
+ * UUID-based random salt.
+ * OpenSSL-generated random IV.
+ * 100K key stretch iterations.
 * Localized to a single .ward file.
 
 ## Contributing
