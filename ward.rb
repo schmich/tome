@@ -9,10 +9,10 @@ class WardError < RuntimeError
 end
 
 class Ward
-  def initialize(store_filename, master_password, stretch = 100_000)
+  def initialize(store_filename, master_password, default_stretch = 100_000)
     @store_filename = store_filename
     @master_password = master_password
-    @stretch = stretch
+    @default_stretch = default_stretch
     authenticate()
   end
 
@@ -179,28 +179,29 @@ private
   
   def load_store()
     if !File.exist?(@store_filename)
-      return { :store => {}, :salt => Crypt.new_salt, :iv => Crypt.new_iv }
+      return { :store => {}, :salt => Crypt.new_salt, :iv => Crypt.new_iv, :stretch => @default_stretch }
     end
 
     File.open(@store_filename, 'rb') { |file|
       if file.eof?
-        return { :store => {}, :salt => Crypt.new_salt, :iv => Crypt.new_iv }
+        return { :store => {}, :salt => Crypt.new_salt, :iv => Crypt.new_iv, :stretch => @default_stretch }
       end
 
       salt_length = file.readpartial(4).unpack('i').first
       salt = file.readpartial(salt_length)
       iv_length = file.readpartial(4).unpack('i').first
       iv = file.readpartial(iv_length)
+      stretch = file.readpartial(4).unpack('i').first
       encrypted_yaml = file.read
 
-      ret = { :salt => salt, :iv => iv }
+      ret = { :salt => salt, :iv => iv, :stretch => stretch }
       return ret if encrypted_yaml.length == 0
 
       begin
         yaml = Crypt.decrypt(
           :value => encrypted_yaml,
           :password => @master_password,
-          :stretch => @stretch,
+          :stretch => stretch,
           :salt => salt,
           :iv => iv
         )
@@ -215,15 +216,15 @@ private
     }
   end
 
-  def save_store(store, salt, iv)
+  def save_store(store, salt, iv, stretch)
     yaml = YAML.dump(store)
 
     encrypted_yaml = Crypt.encrypt(
       :value => yaml, 
       :password => @master_password,
-      :stretch => @stretch,
       :salt => salt,
-      :iv => iv
+      :iv => iv,
+      :stretch => stretch
     )
 
     File.open(@store_filename, 'wb') do |out|
@@ -231,6 +232,7 @@ private
       out.write(salt)
       out.write([iv.length].pack('i'))
       out.write(iv)
+      out.write([stretch].pack('i'))
       out.write(encrypted_yaml)
     end
   end
@@ -248,10 +250,11 @@ private
     store = values[:store]
     salt = values[:salt]
     iv = values[:iv]
+    stretch = values[:stretch]
 
     yield store
 
-    save_store(store, salt, iv)
+    save_store(store, salt, iv, stretch)
     store = nil
 
     GC.start
