@@ -178,13 +178,15 @@ private
   end
   
   def load_store()
+    new_store = { :store => {}, :salt => Crypt.new_salt, :iv => Crypt.new_iv, :stretch => @default_stretch }
+
     if !File.exist?(@store_filename)
-      return { :store => {}, :salt => Crypt.new_salt, :iv => Crypt.new_iv, :stretch => @default_stretch }
+      return new_store
     end
 
     File.open(@store_filename, 'rb') { |file|
       if file.eof?
-        return { :store => {}, :salt => Crypt.new_salt, :iv => Crypt.new_iv, :stretch => @default_stretch }
+        return new_store
       end
 
       salt_length = file.readpartial(4).unpack('i').first
@@ -194,8 +196,8 @@ private
       stretch = file.readpartial(4).unpack('i').first
       encrypted_yaml = file.read
 
-      ret = { :salt => salt, :iv => iv, :stretch => stretch }
-      return ret if encrypted_yaml.length == 0
+      values = { :salt => salt, :iv => iv, :stretch => stretch }
+      return values if encrypted_yaml.length == 0
 
       begin
         yaml = Crypt.decrypt(
@@ -206,13 +208,13 @@ private
           :iv => iv
         )
       rescue ArgumentError
-        return ret.merge(:store => {})
+        return values.merge(:store => {})
       rescue OpenSSL::Cipher::CipherError
         raise MasterPasswordError
       end
 
       store = YAML.load(yaml)
-      return ret.merge(:store => (store ? store : {}))
+      return values.merge(:store => (store ? store : {}))
     }
   end
 
