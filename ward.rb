@@ -9,10 +9,10 @@ class WardError < RuntimeError
 end
 
 class Ward
-  def initialize(store_filename, master_password, key_stretch = 100_000)
+  def initialize(store_filename, master_password, stretch = 100_000)
     @store_filename = store_filename
     @master_password = master_password
-    @key_stretch = key_stretch
+    @stretch = stretch
     authenticate()
   end
 
@@ -200,7 +200,7 @@ private
         yaml = Crypt.decrypt(
           :value => encrypted_yaml,
           :password => @master_password,
-          :key_stretch => @key_stretch,
+          :stretch => @stretch,
           :salt => salt,
           :iv => iv
         )
@@ -221,7 +221,7 @@ private
     encrypted_yaml = Crypt.encrypt(
       :value => yaml, 
       :password => @master_password,
-      :key_stretch => @key_stretch,
+      :stretch => @stretch,
       :salt => salt,
       :iv => iv
     )

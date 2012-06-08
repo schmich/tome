@@ -25,7 +25,7 @@ private
 
   def self.crypt(method, opts)
     return nil if opts.nil? || opts.empty? || opts[:value].nil?
-    return nil if opts[:password].nil? || opts[:key_stretch].nil?
+    return nil if opts[:password].nil? || opts[:stretch].nil?
     return nil if opts[:iv].nil? || opts[:salt].nil?
 
     cipher = new_cipher
@@ -42,7 +42,7 @@ private
   def self.crypt_key(opts)
     password = opts[:password]
     salt = opts[:salt]
-    iterations = opts[:key_stretch]
+    iterations = opts[:stretch]
     key_length = 32 # 256 bits
     hash = OpenSSL::Digest::SHA512.new
 
