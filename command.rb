@@ -32,20 +32,20 @@ private
 
   def handle_command(args)
     command = args[0]
-    if command =~ /\Ahelp\z/i
+    if command =~ /\A(help|-h|--h)\z/i
       # TODO: Implement.
     end
 
     case command
-      when /\A(set|new|add)\z/i
+      when /\A(s|set|new|add)\z/i
         args.shift
         set(args)
 
-      when /\A(get|show)\z/i
+      when /\A(g|get|show)\z/i
         args.shift
         get(args)
 
-      when /\A(del|delete|rm|remove)\z/i
+      when /\A(d|del|delete|rm|remove)\z/i
         args.shift
         delete(args)
     end
@@ -300,7 +300,7 @@ Examples:
   ward set chris@gmail.com p4ssw0rd
   ward set chris@gmail.com p4ssw0rd gmail
 
-Alias: set, new, add
+Alias: s, set, new, add
 USAGE
 
 $get_usage = <<USAGE
@@ -315,7 +315,7 @@ Examples:
   ward get gmail.com
   ward get chris@gmail.com
 
-Alias: get, show
+Alias: g, get, show
 USAGE
 
 $delete_usage = <<USAGE
@@ -330,5 +330,5 @@ Examples:
   ward del gmail.com
   ward del chris@gmail.com
 
-Alias: del, delete, rm, remove
+Alias: d, del, delete, rm, remove
 USAGE
