@@ -189,6 +189,7 @@ private
         return new_store
       end
 
+      version = file.readpartial(4).unpack('i').first
       salt_length = file.readpartial(4).unpack('i').first
       salt = file.readpartial(salt_length)
       iv_length = file.readpartial(4).unpack('i').first
@@ -230,6 +231,7 @@ private
     )
 
     File.open(@store_filename, 'wb') do |out|
+      out.write([FILE_FORMAT_VERSION].pack('i'))
       out.write([salt.length].pack('i'))
       out.write(salt)
       out.write([iv.length].pack('i'))
@@ -280,4 +282,6 @@ private
     # If the master password is invalid, the access exception will propagate.
     read_store { }
   end
+
+  FILE_FORMAT_VERSION = 1
 end
