@@ -75,7 +75,7 @@ private
     entry = entry_by_nick(store, opts)
 
     if entry.nil? || entry.last.nil?
-      raise WardError, "No information found for @#{opts[:nick]}."
+      raise WardError, "No information found for nickname #{opts[:nick]}."
     end
 
     entry.last['password'] = opts[:password]
@@ -111,12 +111,12 @@ private
     username = opts[:username]
 
     if domain.casecmp(entry.last['domain']) != 0
-      raise WardError, "Nickname @#{nick} is already in use."
+      raise WardError, "Nickname #{nick} is already in use."
     end
 
     if !username.nil?
       if username.casecmp(entry.last['username']) != 0
-        raise WardError, "Nickname @#{nick} is already in use."
+        raise WardError, "Nickname #{nick} is already in use."
       end
     end
   end
