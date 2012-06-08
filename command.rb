@@ -1,4 +1,5 @@
 require 'io/console'
+require 'clipboard'
 require 'ward'
 
 class CommandError < RuntimeError
@@ -44,6 +45,10 @@ private
       when /\A(get|show)\z/i
         args.shift
         get(args)
+
+      when /\A(copy|cp)\z/i
+        args.shift
+        copy(args)
 
       when /\A(del|delete|rm|remove)\z/i
         args.shift
@@ -140,6 +145,29 @@ private
       puts "Deleted password for #{format_id(id)}."
     else
       puts "No password for #{format_id(id)}."
+    end
+  end
+
+  def copy(args)
+    if args.length != 1
+      puts $copy_usage
+      raise CommandError
+    end
+
+    id = parse_id(args[0])
+
+    ward = new_ward()
+    password = ward.get(id)
+
+    if password.nil?
+      puts "No password for #{format_id(id)}."
+    else
+      Clipboard.copy(password)
+      if Clipboard.paste != password
+        puts 'Copy failed.'
+      else
+        puts 'Copied.'
+      end
     end
   end
 
@@ -281,6 +309,7 @@ Usage: ward <command> [options]
   ward set
   ward get
   ward del
+  ward copy
   ward help
 USAGE
 
@@ -331,4 +360,19 @@ Examples:
   ward del chris@gmail.com
 
 Alias: del, delete, rm, remove
+USAGE
+
+$copy_usage = <<USAGE
+Usage: ward copy <options>
+
+  ward copy <nickname>
+  ward copy [user@]<domain>
+
+Examples:
+
+  ward copy gmail
+  ward copy gmail.com
+  ward copy chris@gmail.com
+
+Alias: copy, cp
 USAGE
