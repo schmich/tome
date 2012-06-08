@@ -25,7 +25,7 @@ class Ward
 
     created = false
 
-    write_store do |store|
+    writable_store do |store|
       if !opts[:domain].nil?
         created = set_by_username_domain(store, opts)
       elsif !opts[:nick].nil?
@@ -43,7 +43,7 @@ class Ward
 
     password = nil
 
-    read_store do |store|
+    readable_store do |store|
       if !opts[:nick].nil?
         password = get_by_nick(store, opts)
       else
@@ -59,7 +59,7 @@ class Ward
 
     deleted = false
 
-    write_store do |store|
+    writable_store do |store|
       if !opts[:nick].nil?
         deleted = delete_by_nick(store, opts)
       else
@@ -241,14 +241,14 @@ private
     end
   end
 
-  def read_store()
+  def readable_store()
     store = load_store()[:store]
     yield store
     store = nil
     GC.start
   end
 
-  def write_store()
+  def writable_store()
     values = load_store()
 
     store = values[:store]
@@ -280,7 +280,7 @@ private
   def authenticate
     # Force a read.
     # If the master password is invalid, the access exception will propagate.
-    read_store { }
+    readable_store { }
   end
 
   FILE_FORMAT_VERSION = 1
