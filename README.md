@@ -1,6 +1,6 @@
 ## Ward
 
-Lightweight password management with a humane command-line interface.
+Lightweight password manager with a humane command-line interface.
 
 ## Installation
 

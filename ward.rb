@@ -246,6 +246,6 @@ private
   def authenticate
     # Force a read.
     # If the master password is invalid, the access exception will propagate.
-    read_store { |store| }
+    read_store { }
   end
 end
