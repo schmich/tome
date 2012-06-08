@@ -78,7 +78,7 @@ private
       raise WardError, "No information found for nickname #{opts[:nick]}."
     end
 
-    entry.last['password'] = opts[:password]
+    entry.last[:password] = opts[:password]
 
     return false
   end
@@ -92,10 +92,10 @@ private
     created = !store.include?(key)
 
     store[key] = {}
-    store[key]['username'] = opts[:username]
-    store[key]['domain'] = opts[:domain]
-    store[key]['password'] = opts[:password]
-    store[key]['nick'] = opts[:nick]
+    store[key][:username] = opts[:username]
+    store[key][:domain] = opts[:domain]
+    store[key][:password] = opts[:password]
+    store[key][:nick] = opts[:nick]
 
     return created
   end
@@ -110,12 +110,12 @@ private
     domain = opts[:domain]
     username = opts[:username]
 
-    if domain.casecmp(entry.last['domain']) != 0
+    if domain.casecmp(entry.last[:domain]) != 0
       raise WardError, "Nickname #{nick} is already in use."
     end
 
     if !username.nil?
-      if username.casecmp(entry.last['username']) != 0
+      if username.casecmp(entry.last[:username]) != 0
         raise WardError, "Nickname #{nick} is already in use."
       end
     end
@@ -126,7 +126,7 @@ private
 
     return nil if entry.nil? || entry.last.nil?
 
-    return entry.last['password']
+    return entry.last[:password]
   end
 
   def get_by_nick(store, opts)
@@ -134,7 +134,7 @@ private
 
     return nil if entry.nil? || entry.last.nil?
 
-    return entry.last['password']
+    return entry.last[:password]
   end
 
   def entry_by_username_domain(store, opts)
@@ -151,7 +151,7 @@ private
     return nil if nick.nil?
 
     return store.find { |key, info|
-      !info['nick'].nil? && info['nick'].casecmp(nick) == 0
+      !info[:nick].nil? && info[:nick].casecmp(nick) == 0
     }
   end
 
@@ -171,7 +171,7 @@ private
     return nil if nick.nil?
 
     same = store.reject! { |key, info|
-      !info['nick'].nil? && info['nick'].casecmp(nick) == 0
+      !info[:nick].nil? && info[:nick].casecmp(nick) == 0
     }.nil?
 
     return !same
