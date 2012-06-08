@@ -9,7 +9,7 @@ class WardError < RuntimeError
 end
 
 class Ward
-  def initialize(store_filename, master_password, key_stretch = 250_000)
+  def initialize(store_filename, master_password, key_stretch = 100_000)
     @store_filename = store_filename
     @master_password = master_password
     @key_stretch = key_stretch
@@ -179,54 +179,81 @@ private
   
   def load_store()
     if !File.exist?(@store_filename)
-      return {}
-    else
-      encrypted_yaml = File.open(@store_filename, 'rb') { |file| file.read }
-      return {} if encrypted_yaml.length == 0
+      return { :store => {}, :salt => Crypt.new_salt, :iv => Crypt.new_iv }
+    end
+
+    File.open(@store_filename, 'rb') { |file|
+      if file.eof?
+        return { :store => {}, :salt => Crypt.new_salt, :iv => Crypt.new_iv }
+      end
+
+      salt_length = file.readpartial(4).unpack('i').first
+      salt = file.readpartial(salt_length)
+      iv_length = file.readpartial(4).unpack('i').first
+      iv = file.readpartial(iv_length)
+      encrypted_yaml = file.read
+
+      ret = { :salt => salt, :iv => iv }
+      return ret if encrypted_yaml.length == 0
 
       begin
         yaml = Crypt.decrypt(
           :value => encrypted_yaml,
           :password => @master_password,
-          :key_stretch => @key_stretch
+          :key_stretch => @key_stretch,
+          :salt => salt,
+          :iv => iv
         )
       rescue ArgumentError
-        return {}
+        return ret.merge(:store => {})
       rescue OpenSSL::Cipher::CipherError
         raise MasterPasswordError
       end
 
       store = YAML.load(yaml)
-      return store ? store : {}
-    end
+      return ret.merge(:store => (store ? store : {}))
+    }
   end
 
-  def save_store(store)
+  def save_store(store, salt, iv)
     yaml = YAML.dump(store)
 
     encrypted_yaml = Crypt.encrypt(
       :value => yaml, 
       :password => @master_password,
-      :key_stretch => @key_stretch
+      :key_stretch => @key_stretch,
+      :salt => salt,
+      :iv => iv
     )
 
     File.open(@store_filename, 'wb') do |out|
+      out.write([salt.length].pack('i'))
+      out.write(salt)
+      out.write([iv.length].pack('i'))
+      out.write(iv)
       out.write(encrypted_yaml)
     end
   end
 
   def read_store()
-    store = load_store()
+    store = load_store()[:store]
     yield store
     store = nil
     GC.start
   end
 
   def write_store()
-    store = load_store()
-    save = yield store
-    save_store(store)
+    values = load_store()
+
+    store = values[:store]
+    salt = values[:salt]
+    iv = values[:iv]
+
+    yield store
+
+    save_store(store, salt, iv)
     store = nil
+
     GC.start
   end
 
