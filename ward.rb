@@ -5,6 +5,9 @@ require 'crypt'
 class MasterPasswordError < RuntimeError
 end
 
+class WardError < RuntimeError
+end
+
 class Ward
   def initialize(store_filename, master_password, key_stretch = 250_000)
     @store_filename = store_filename
@@ -16,27 +19,20 @@ class Ward
   # TODO: Return a value or throw an exception
   # if parameters are invalid.
   def set(opts = {})
-    return if opts.nil? || opts.empty?
+    if opts.nil? || opts.empty?
+      raise WardError, 'You must specify a domain or nickname.'
+    end
 
     created = false
 
     write_store do |store|
-      username = opts[:username]
-      domain = opts[:domain]
-      password = opts[:password]
-      nick = opts[:nick]
-
-      key = format_store_key(opts)
-      return if key.nil?
-
-      created = !store.include?(key)
-
-      # TODO: Enforce nick uniqueness.
-      store[key] = {}
-      store[key]['username'] = username
-      store[key]['domain'] = domain
-      store[key]['password'] = password
-      store[key]['nick'] = nick
+      if !opts[:domain].nil?
+        created = set_by_username_domain(store, opts)
+      elsif !opts[:nick].nil?
+        created = set_by_nick(store, opts)
+      else
+        raise WardError, 'You must specify a domain or nickname.'
+      end
     end
 
     return created
@@ -75,27 +71,88 @@ class Ward
   end
 
 private
-  def get_by_username_domain(store, opts)
+  def set_by_nick(store, opts)
+    entry = entry_by_nick(store, opts)
+
+    if entry.nil? || entry.last.nil?
+      raise WardError, "No information found for @#{opts[:nick]}."
+    end
+
+    entry.last['password'] = opts[:password]
+
+    return false
+  end
+
+  def set_by_username_domain(store, opts)
     key = format_store_key(opts)
-    return nil if key.nil?
+    return false if key.nil?
 
-    info = store[key]
-    return nil if info.nil?
+    ensure_nick_unique(store, opts)
 
-    return info['password']
+    created = !store.include?(key)
+
+    store[key] = {}
+    store[key]['username'] = opts[:username]
+    store[key]['domain'] = opts[:domain]
+    store[key]['password'] = opts[:password]
+    store[key]['nick'] = opts[:nick]
+
+    return created
+  end
+
+  def ensure_nick_unique(store, opts)
+    nick = opts[:nick]
+    return if nick.nil?
+
+    entry = entry_by_nick(store, opts)
+    return if entry.nil? || entry.last.nil?
+
+    domain = opts[:domain]
+    username = opts[:username]
+
+    if domain.casecmp(entry.last['domain']) != 0
+      raise WardError, "Nickname @#{nick} is already in use."
+    end
+
+    if !username.nil?
+      if username.casecmp(entry.last['username']) != 0
+        raise WardError, "Nickname @#{nick} is already in use."
+      end
+    end
+  end
+
+  def get_by_username_domain(store, opts)
+    entry = entry_by_username_domain(store, opts)
+
+    return nil if entry.nil? || entry.last.nil?
+
+    return entry.last['password']
   end
 
   def get_by_nick(store, opts)
+    entry = entry_by_nick(store, opts)
+
+    return nil if entry.nil? || entry.last.nil?
+
+    return entry.last['password']
+  end
+
+  def entry_by_username_domain(store, opts)
+    find_key = format_store_key(opts)
+    return nil if find_key.nil?
+
+    return store.find { |key, info|
+      !key.nil? && key.casecmp(find_key) == 0
+    }
+  end
+
+  def entry_by_nick(store, opts)
     nick = opts[:nick]
     return nil if nick.nil?
 
-    match = store.find { |key, info|
+    return store.find { |key, info|
       !info['nick'].nil? && info['nick'].casecmp(nick) == 0
     }
-
-    return nil if match.nil?
-
-    return match['password']
   end
 
   def delete_by_username_domain(store, opts)
