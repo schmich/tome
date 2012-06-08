@@ -1,5 +1,4 @@
 require 'io/console'
-require 'clipboard'
 require 'ward'
 
 class CommandError < RuntimeError
@@ -45,10 +44,6 @@ private
       when /\A(get|show)\z/i
         args.shift
         get(args)
-
-      when /\A(copy|cp)\z/i
-        args.shift
-        copy(args)
 
       when /\A(del|delete|rm|remove)\z/i
         args.shift
@@ -121,9 +116,9 @@ private
     password = ward.get(id)
 
     if password.nil?
-      puts "No password for #{format_id(id)}."
+      $stderr.puts "No password for #{format_id(id)}."
     else
-      puts password
+      print password
     end
   end
 
@@ -145,29 +140,6 @@ private
       puts "Deleted password for #{format_id(id)}."
     else
       puts "No password for #{format_id(id)}."
-    end
-  end
-
-  def copy(args)
-    if args.length != 1
-      puts $copy_usage
-      raise CommandError
-    end
-
-    id = parse_id(args[0])
-
-    ward = new_ward()
-    password = ward.get(id)
-
-    if password.nil?
-      puts "No password for #{format_id(id)}."
-    else
-      Clipboard.copy(password)
-      if Clipboard.paste != password
-        puts 'Copy failed.'
-      else
-        puts 'Copied.'
-      end
     end
   end
 
@@ -238,14 +210,14 @@ private
 
   def prompt_password
     begin
-      print 'Password: '
+      $stderr.print 'Password: '
       password = get_password()
 
-      print 'Password (verify): '
+      $stderr.print 'Password (verify): '
       verify = get_password()
 
       if verify != password
-        puts 'Passwords do not match.'
+        $stderr.puts 'Passwords do not match.'
         raise
       end
     rescue
@@ -256,7 +228,7 @@ private
   end
 
   def prompt_username
-    print 'Username (optional): '
+    $stderr.print 'Username (optional): '
     username = $stdin.gets.strip
     if !username.empty?
       { :username => username }
@@ -266,7 +238,7 @@ private
   end
 
   def prompt_nick
-    print 'Nickname (optional): '
+    $stderr.print 'Nickname (optional): '
     nick = $stdin.gets.strip
     if !nick.empty?
       { :nick => nick }
@@ -278,7 +250,7 @@ private
   def get_password
     $stdin.noecho { |stdin|
       password = stdin.gets.sub(/[\r\n]+\z/, '')
-      puts
+      $stderr.puts
 
       return password
     }
@@ -286,11 +258,11 @@ private
 
   def new_ward
     begin
-      print 'Master password: '
+      $stderr.print 'Master password: '
       master_password = get_password()
       ward = Ward.new(@store_filename, master_password)
     rescue MasterPasswordError
-      puts 'Incorrect master password.'
+      $stderr.puts 'Incorrect master password.'
       retry
     end
 
@@ -309,7 +281,6 @@ Usage: ward <command> [options]
   ward set
   ward get
   ward del
-  ward copy
   ward help
 USAGE
 
@@ -360,19 +331,4 @@ Examples:
   ward del chris@gmail.com
 
 Alias: del, delete, rm, remove
-USAGE
-
-$copy_usage = <<USAGE
-Usage: ward copy <options>
-
-  ward copy <nickname>
-  ward copy [user@]<domain>
-
-Examples:
-
-  ward copy gmail
-  ward copy gmail.com
-  ward copy chris@gmail.com
-
-Alias: copy, cp
 USAGE
