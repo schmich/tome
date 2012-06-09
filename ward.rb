@@ -178,51 +178,47 @@ private
   end
   
   def load_store()
-    new_store = { :store => {}, :salt => Crypt.new_salt, :iv => Crypt.new_iv, :stretch => @default_stretch }
-
     if !File.exist?(@store_filename)
-      return new_store
+      return nil
     end
 
-    File.open(@store_filename, 'rb') { |file|
-      if file.eof?
-        return new_store
-      end
+    contents = File.open(@store_filename, 'rb') { |file| file.read }
+    if contents.length == 0
+      return nil
+    end
 
-      version = file.readpartial(4).unpack('i').first
-      salt_length = file.readpartial(4).unpack('i').first
-      salt = file.readpartial(salt_length)
-      iv_length = file.readpartial(4).unpack('i').first
-      iv = file.readpartial(iv_length)
-      stretch = file.readpartial(4).unpack('i').first
-      encrypted_yaml = file.read
-
-      values = { :salt => salt, :iv => iv, :stretch => stretch }
-      return values if encrypted_yaml.length == 0
-
-      begin
-        yaml = Crypt.decrypt(
-          :value => encrypted_yaml,
-          :password => @master_password,
-          :stretch => stretch,
-          :salt => salt,
-          :iv => iv
-        )
-      rescue ArgumentError
-        return values.merge(:store => {})
-      rescue OpenSSL::Cipher::CipherError
-        raise MasterPasswordError
-      end
-
-      store = YAML.load(yaml)
-      return values.merge(:store => (store ? store : {}))
+    config = YAML.load(contents)
+    values = {
+      :salt => config[:salt],
+      :iv => config[:iv],
+      :stretch => config[:stretch]
     }
+
+    encrypted_store = config[:store]
+    return values if encrypted_store.nil? || encrypted_store.empty?
+
+    begin
+      store_yaml = Crypt.decrypt(
+        :value => encrypted_store,
+        :password => @master_password,
+        :stretch => values[:stretch],
+        :salt => values[:salt],
+        :iv => values[:iv]
+      )
+    rescue ArgumentError
+      return values.merge(:store => {})
+    rescue OpenSSL::Cipher::CipherError
+      raise MasterPasswordError
+    end
+
+    store = YAML.load(store_yaml)
+    return values.merge(:store => (store ? store : {}))
   end
 
   def save_store(store, salt, iv, stretch)
     yaml = YAML.dump(store)
 
-    encrypted_yaml = Crypt.encrypt(
+    encrypted_store = Crypt.encrypt(
       :value => yaml, 
       :password => @master_password,
       :salt => salt,
@@ -230,26 +226,30 @@ private
       :stretch => stretch
     )
 
-    File.open(@store_filename, 'wb') do |out|
-      out.write([FILE_FORMAT_VERSION].pack('i'))
-      out.write([salt.length].pack('i'))
-      out.write(salt)
-      out.write([iv.length].pack('i'))
-      out.write(iv)
-      out.write([stretch].pack('i'))
-      out.write(encrypted_yaml)
+    content = {
+      :salt => salt,
+      :iv => iv, 
+      :stretch => stretch,
+      :store => encrypted_store
+    }
+
+    File.open(@store_filename, 'wb') do |file|
+      YAML.dump(content, file)
     end
   end
 
   def readable_store()
-    store = load_store()[:store]
+    values = load_store || new_store
+    store = values[:store]
+
     yield store
+
     store = nil
     GC.start
   end
 
   def writable_store()
-    values = load_store()
+    values = load_store() || new_store
 
     store = values[:store]
     salt = values[:salt]
@@ -262,6 +262,15 @@ private
     store = nil
 
     GC.start
+  end
+
+  def new_store
+    {
+      :store => {},
+      :salt => Crypt.new_salt,
+      :iv => Crypt.new_iv,
+      :stretch => @default_stretch
+    }
   end
 
   def format_store_key(opts)
