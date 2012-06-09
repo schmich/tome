@@ -15,18 +15,6 @@ class TestWard < Test::Unit::TestCase
     @temp_store.delete rescue nil
   end
 
-  # The ward store should not be directly parseable by YAML
-  # since it should be encrypted.
-  def test_yaml_load_fail
-    @ward.set($dph) 
-    begin
-      YAML.load_file(@temp_store.path)
-    rescue Exception => error
-    end
-
-    assert(!error.nil?)
-  end
-
   def test_set
     created = @ward.set($dph)
     assert(created)
