@@ -188,7 +188,11 @@ private
     end
 
     config = YAML.load(contents)
+
+    # TODO: Throw if these values are nil.
+    # TODO: Verify version number, raise if incompatible.
     values = {
+      :version => FILE_VERSION,
       :salt => config[:salt],
       :iv => config[:iv],
       :stretch => config[:stretch]
@@ -226,7 +230,8 @@ private
       :stretch => stretch
     )
 
-    content = {
+    contents = {
+      :version => FILE_VERSION,
       :salt => salt,
       :iv => iv, 
       :stretch => stretch,
@@ -234,7 +239,7 @@ private
     }
 
     File.open(@store_filename, 'wb') do |file|
-      YAML.dump(content, file)
+      YAML.dump(contents, file)
     end
   end
 
@@ -250,8 +255,6 @@ private
 
   def writable_store()
     values = load_store() || new_store
-
-    # TODO: Throw if these values are nil.
 
     store = values[:store]
     salt = values[:salt]
@@ -294,5 +297,5 @@ private
     readable_store { }
   end
 
-  FILE_FORMAT_VERSION = 1
+  FILE_VERSION = 1
 end
