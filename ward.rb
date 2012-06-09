@@ -251,6 +251,8 @@ private
   def writable_store()
     values = load_store() || new_store
 
+    # TODO: Throw if these values are nil.
+
     store = values[:store]
     salt = values[:salt]
     iv = values[:iv]
