@@ -1,6 +1,7 @@
 require 'io/console'
 require 'ward'
 require 'passgen'
+require 'clipboard'
 
 class CommandError < RuntimeError
 end
@@ -24,7 +25,8 @@ private
 
     begin
       handle_command(args)
-    rescue CommandError
+    rescue CommandError => error
+      $stderr.puts error.message
       return 2
     end
 
@@ -53,13 +55,19 @@ private
       when /\A(gen|generate)\z/i
         args.shift
         generate(args)
+
+      when /\A(cp|copy)\z/i
+        args.shift
+        copy(args)
+
+      else
+        raise CommandError, "Unrecognized command: #{command}." 
     end
   end
 
   def set(args)
     if args.length > 3
-      $stderr.puts $set_usage
-      raise CommandError
+      raise CommandError, $set_usage
     end
     
     opts = {}
@@ -107,8 +115,7 @@ private
 
   def get(args)
     if args.length != 1
-      $stderr.puts $get_usage
-      raise CommandError
+      raise CommandError, $get_usage
     end
 
     # ward get fb
@@ -122,14 +129,13 @@ private
     if password.nil?
       $stderr.puts "No password for #{format_id(id)}."
     else
-      $stdout.print password
+      $stdout.puts password
     end
   end
 
   def delete(args)
     if args.length != 1
-      $stderr.puts $delete_usage
-      raise CommandError
+      raise CommandError, $delete_usage
     end
 
     # ward del fb
@@ -149,8 +155,7 @@ private
 
   def generate(args)
     if args.length > 2
-      $stderr.puts $generate_usage
-      raise CommandError
+      raise CommandError, $generate_usage
     end
     
     opts = {}
@@ -181,6 +186,31 @@ private
       $stdout.puts "Generated password for #{format_id(opts)}."
     else
       $stdout.puts "Updated password for #{format_id(opts)} with generated value."
+    end
+  end
+
+  def copy(args)
+    if args.length != 1
+      raise CommandError, $copy_usage
+    end
+
+    # ward cp fb
+    # ward cp bar.com
+    # ward cp foo@bar.com
+    id = parse_id(args[0])
+
+    ward = new_ward()
+    password = ward.get(id)
+
+    if password.nil?
+      $stderr.puts "No password for #{format_id(id)}."
+    else
+      Clipboard.copy password
+      if Clipboard.paste == password
+        $stdout.puts "Password for #{format_id(id)} copied to clipboard."
+      else
+        $stderr.puts "Failed to copy password for #{format_id(id)} to clipboard."
+      end
     end
   end
 
@@ -334,6 +364,7 @@ Usage:
   ward get
   ward del
   ward gen
+  ward cp
   ward help
 USAGE
 
@@ -401,4 +432,19 @@ Examples:
   ward gen chris@gmail.com gmail
 
 Alias: gen, generate
+USAGE
+
+$copy_usage = <<USAGE
+Usage:
+
+  ward cp <nickname>
+  ward cp [user@]<domain>
+
+Examples:
+
+  ward cp gmail
+  ward cp gmail.com
+  ward cp chris@gmail.com
+
+Alias: cp, copy
 USAGE
