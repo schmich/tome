@@ -1,5 +1,6 @@
 require 'io/console'
 require 'ward'
+require 'passgen'
 
 class CommandError < RuntimeError
 end
@@ -37,7 +38,7 @@ private
     end
 
     case command
-      when /\A(s|set|new|add)\z/i
+      when /\A(s|set)\z/i
         args.shift
         set(args)
 
@@ -48,24 +49,27 @@ private
       when /\A(d|del|delete|rm|remove)\z/i
         args.shift
         delete(args)
+
+      when /\A(gen|generate)\z/i
+        args.shift
+        generate(args)
     end
   end
 
   def set(args)
-    opts = {}
-
     if args.length > 3
       $stderr.puts $set_usage
       raise CommandError
     end
     
-     ward = new_ward()
+    opts = {}
+    ward = new_ward()
 
     case args.length
       # ward new
       # ward set
       when 0
-        opts.merge!(prompt_all())
+        opts.merge!(prompt_all_set())
 
       # ward set bar.com
       # ward set foo@bar.com
@@ -143,6 +147,43 @@ private
     end
   end
 
+  def generate(args)
+    if args.length > 2
+      $stderr.puts $generate_usage
+      raise CommandError
+    end
+    
+    opts = {}
+    ward = new_ward()
+
+    case args.length
+      # ward gen
+      when 0
+        opts.merge!(prompt_all_generate())
+
+      # ward gen gmail.com
+      # ward gen chris@gmail.com
+      when 1
+        opts.merge!(parse_username_domain(args[0]))
+
+      # ward gen gmail.com gmail
+      # ward gen chris@gmail.com gmail
+      when 2
+        opts.merge!(parse_username_domain(args[0]))
+        opts.merge!(:nick => args[1])
+    end
+
+    opts.merge!(:password => generate_password())
+
+    created = ward.set(opts)
+
+    if created
+      $stdout.puts "Generated password for #{format_id(opts)}."
+    else
+      $stdout.puts "Updated password for #{format_id(opts)} with generated value."
+    end
+  end
+
   def format_id(opts)
     return nil if opts.nil? || opts.empty?
 
@@ -185,21 +226,32 @@ private
     return opts
   end
 
-  def prompt_all
+  def generate_password
+    Passgen.generate(:length => 20, :symbols => true)
+  end
+
+  def prompt_all_set
     {}.merge!(prompt_domain())
-      .merge!(prompt_password())
-      .merge!(prompt_username())
-      .merge!(prompt_nick())
+      .merge!(prompt_password_username_nick())
+  end
+
+  def prompt_all_generate
+    {}.merge!(prompt_domain())
+      .merge!(prompt_username_nick())
   end
 
   def prompt_password_username_nick
     {}.merge!(prompt_password())
-      .merge!(prompt_username())
-      .merge!(prompt_nick())
+      .merge!(prompt_username_nick())
   end
 
   def prompt_password_nick
     {}.merge!(prompt_password())
+      .merge!(prompt_nick())
+  end
+
+  def prompt_username_nick
+    {}.merge!(prompt_username())
       .merge!(prompt_nick())
   end
 
@@ -276,16 +328,17 @@ end
 
 # TODO: Complete these.
 $usage = <<USAGE
-Usage: ward <command> [options]
+Usage:
 
   ward set
   ward get
   ward del
+  ward gen
   ward help
 USAGE
 
 $set_usage = <<USAGE
-Usage: ward set [options]
+Usage:
 
   ward set
   ward set [user@]<domain> [password]
@@ -300,11 +353,11 @@ Examples:
   ward set chris@gmail.com p4ssw0rd
   ward set chris@gmail.com p4ssw0rd gmail
 
-Alias: s, set, new, add
+Alias: s, set
 USAGE
 
 $get_usage = <<USAGE
-Usage: ward get <options>
+Usage:
 
   ward get <nickname>
   ward get [user@]<domain>
@@ -319,7 +372,7 @@ Alias: g, get, show
 USAGE
 
 $delete_usage = <<USAGE
-Usage: ward del <options>
+Usage:
 
   ward del <nickname>
   ward del [user@]<domain>
@@ -331,4 +384,21 @@ Examples:
   ward del chris@gmail.com
 
 Alias: d, del, delete, rm, remove
+USAGE
+
+$generate_usage = <<USAGE
+Usage:
+
+  ward gen
+  ward gen [user@]<domain> [nickname]
+
+Examples:
+
+  ward gen
+  ward gen gmail.com
+  ward gen chris@gmail.com
+  ward gen gmail.com gmail
+  ward gen chris@gmail.com gmail
+
+Alias: gen, generate
 USAGE
