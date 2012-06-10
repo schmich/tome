@@ -43,17 +43,13 @@ class Ward
     end
   end
 
-  def delete(opts = {})
-    if opts.nil? || opts.empty?
+  def delete(id)
+    if id.nil? || id.empty?
       raise ArgumentError
     end
 
     return writable_store do |store|
-      if !opts[:id].nil?
-        delete_entry(store, opts)
-      else
-        raise ArgumentError
-      end
+      delete_by_id(store, id)
     end
   end
 
@@ -83,12 +79,9 @@ private
     } || {}
   end
 
-  def delete_entry(store, opts)
-    name = opts[:id]
-    return false if name.nil?
-
+  def delete_by_id(store, id)
     same = store.reject! { |key, info|
-      key.casecmp(name) == 0
+      key.casecmp(id) == 0
     }.nil?
 
     return !same

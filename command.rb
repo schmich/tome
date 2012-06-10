@@ -143,15 +143,15 @@ private
     # ward del fb
     # ward del bar.com
     # ward del foo@bar.com
-    opts = { :id => args[0] }
+    id = args[0]
 
     ward = ward_connect()
-    deleted = ward.delete(opts)
+    deleted = ward.delete(id)
 
     if deleted
-      $stdout.puts "Deleted password for #{opts[:id]}."
+      $stdout.puts "Deleted password for #{id}."
     else
-      $stdout.puts "No password found for #{opts[:id]}."
+      $stdout.puts "No password found for #{id}."
     end
   end
 
