@@ -28,8 +28,8 @@ class TestWard < Test::Unit::TestCase
 
   def test_set_get
     @ward.set($dph)
-    get = @ward.get($dh)
-    assert_equal($p, get)
+    find = @ward.find('foo.com')
+    assert_equal('bar', find['foo.com'])
   end
 
   def test_set_update
@@ -39,9 +39,9 @@ class TestWard < Test::Unit::TestCase
     assert(!created)
   end
 
-  def test_get_fail
-    get = @ward.get($dh)
-    assert_nil(get)
+  def test_find_fail
+    find = @ward.find($dh)
+    assert_empty(find)
   end
 
   def test_set_delete
@@ -56,35 +56,36 @@ class TestWard < Test::Unit::TestCase
     assert(!deleted)
   end
 
-  def test_set_delete_get_fail
+  def test_set_delete_find_fail
     created = @ward.set($dph)
     assert(created)
-    get = @ward.get($dh)
-    assert_equal($p, get)
+    find = @ward.find('foo.com')
+    assert_equal('bar', find['foo.com'])
     deleted = @ward.delete($dh)
     assert(deleted)
-    get = @ward.get($dh)
-    assert_nil(get)
+    find = @ward.find('foo.com')
+    assert_empty(find)
   end
 
-  def test_many_set_get
+  def test_many_set_find
     created = @ward.set($dph)
     assert(created)
     created = @ward.set($DPh)
     assert(created)
-    get = @ward.get($dh)
-    assert_equal($p, get)
-    get = @ward.get($Dh)
-    assert_equal($P, get)
+    find = @ward.find('foo.com')
+    assert_equal('bar', find['foo.com'])
+    find = @ward.find('baz.com')
+    assert_equal('quux', find['baz.com'])
   end
 
-  def test_ambiguous_pattern
+  def test_find_pattern
     created = @ward.set({ :id => 'foo@bar.com', :password => 'foo' })
     assert(created)
     created = @ward.set({ :id => 'baz@bar.com', :password => 'baz' })
-    assert_raise(MultipleMatchError) {
-      @ward.get({ :pattern => 'bar.com' })
-    }
+    assert(created)
+    matches = @ward.find('bar.com')
+    assert_equal('foo', matches['foo@bar.com'])
+    assert_equal('baz', matches['baz@bar.com'])
   end
 
   $d = 'foo.com'

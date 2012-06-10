@@ -27,19 +27,23 @@ class Ward
     end
   end
 
-  def get(opts = {})
-    if opts.nil? || opts.empty?
+  def find(pattern)
+    if pattern.nil? || pattern.empty?
       raise ArgumentError
     end
 
     return readable_store do |store|
-      if !opts[:id].nil?
-        get_by_id(store, opts)
-      elsif !opts[:pattern].nil?
-        get_by_pattern(store, opts)
-      else
-        raise ArgumentError
-      end
+      get_by_pattern(store, pattern)
+    end
+  end
+
+  def get(id)
+    if id.nil? || id.empty?
+      raise ArgumentError
+    end
+
+    return readable_store do |store|
+      get_by_id(store, id)
     end
   end
 
@@ -77,8 +81,12 @@ private
     return [entry]
   end
 
-  def get_by_pattern(store, opts)
-    find_by_pattern(store, opts[:pattern])
+  def get_by_pattern(store, pattern)
+    find_by_pattern(store, pattern).map { |key, value|
+      { key => value[:password] }
+    }.inject { |hash, item|
+      hash.merge!(item)
+    } || {}
   end
 
   def delete_entry(store, opts)
@@ -103,7 +111,7 @@ private
   end
 
   def find_by_pattern(store, pattern)
-    return nil if pattern.nil?
+    return {} if pattern.nil?
 
     # TODO: Better matching. Should allow separated
     # substring matching. Exact match > solid substrings > separated substrings.

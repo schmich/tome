@@ -149,18 +149,18 @@ private
     # ward get fb
     # ward get bar.com
     # ward get foo@bar.com
-    opts = { :pattern => args[0] }
+    pattern = args[0]
 
     ward = ward_connect()
-    matches = ward.get(opts)
+    matches = ward.find(pattern)
 
     if matches.empty?
-      raise CommandError, "No password found for #{opts[:pattern]}."
+      raise CommandError, "No password found for #{pattern}."
     elsif matches.count == 1
-      $stdout.puts matches.first.last[:password]
+      $stdout.puts matches.first.last
     else
-      matches.each { |key, info|
-        $stdout.puts "#{key}: #{info[:password]}"
+      matches.each { |key, password|
+        $stdout.puts "#{key}: #{password}"
       }
     end
   end
@@ -223,31 +223,27 @@ private
     # ward cp fb
     # ward cp bar.com
     # ward cp foo@bar.com
-    opts = { :pattern => args[0] }
+    pattern = args[0]
 
-    password = find_password(opts)
+    ward = ward_connect()
+    matches = ward.find(pattern)
 
-    Clipboard.copy password
-    if Clipboard.paste == password
-      $stdout.puts "Password for #{opts[:pattern]} copied to clipboard."
-    else
-      $stderr.puts "Failed to copy password for #{opts[:pattern]} to clipboard."
-    end
-  end
-
-  def find_password(opts)
-    begin
-      ward = ward_connect()
-      return ward.get(opts)
-    rescue IdNotFoundError
+    if matches.empty?
       raise CommandError, "No password found for #{opts[:pattern]}."
-    rescue MultipleMatchError => error
+    elsif matches.count > 1
       message = "Found multiple matches for #{opts[:pattern]}. Did you mean one of the following?\n\n"
       error.matches.each { |match|
         message += "\t#{match}\n"
       }
 
       raise CommandError, message
+    else
+      Clipboard.copy password
+      if Clipboard.paste == password
+        $stdout.puts "Password for #{pattern} copied to clipboard."
+      else
+        $stderr.puts "Failed to copy password for #{pattern} to clipboard."
+      end
     end
   end
 
