@@ -19,7 +19,7 @@ private
     @store_filename = store_filename
     
     if args.length < 1
-      usage
+      $stderr.puts $usage
       return 1
     end
 
@@ -66,12 +66,12 @@ private
   end
 
   def set(args)
-    if args.length > 3
+    if args.length > 2
       raise CommandError, $set_usage
     end
     
     opts = {}
-    ward = new_ward()
+    ward = ward_connect()
 
     case args.length
       # ward new
@@ -79,27 +79,18 @@ private
       when 0
         opts.merge!(prompt_all_set())
 
+      # TODO: Validate that first argument is in [username@]domain form.
+
       # ward set bar.com
       # ward set foo@bar.com
       when 1
-        opts.merge!(parse_username_domain(args[0]))
-        if opts[:username].nil?
-          opts.merge!(prompt_password_username_nick())
-        else
-          opts.merge!(prompt_password_nick())
-        end
+        opts.merge!(:id => args[0])
+        opts.merge!(prompt_password)
 
       # ward set bar.com p4ssw0rd
       # ward set foo@bar.com p4ssw0rd
       when 2
-        opts.merge!(parse_username_domain(args[0]))
-        opts.merge!(:password => args[1])
-
-      # ward set bar.com p4ssw0rd gmail
-      # ward set foo@bar.com p4ssw0rd gmail
-      when 3
-        opts.merge!(parse_username_domain(args[0]))
-        opts.merge!(:password => args[1], :nick => args[2])
+        opts.merge!(:id => args[0], :password => args[1])
     end
 
     created = ward.set(opts)
@@ -110,7 +101,7 @@ private
       $stdout.print 'Updated '
     end
     
-    $stdout.puts "password for #{format_id(opts)}."
+    $stdout.puts "password for #{opts[:id]}."
   end
 
   def get(args)
@@ -121,13 +112,13 @@ private
     # ward get fb
     # ward get bar.com
     # ward get foo@bar.com
-    id = parse_id(args[0])
+    opts = { :id => args[0] }
 
-    ward = new_ward()
-    password = ward.get(id)
+    ward = ward_connect()
+    password = ward.get(opts)
 
     if password.nil?
-      $stderr.puts "No password for #{format_id(id)}."
+      $stderr.puts "No password for #{opts[:id]}."
     else
       $stdout.puts password
     end
@@ -141,25 +132,25 @@ private
     # ward del fb
     # ward del bar.com
     # ward del foo@bar.com
-    id = parse_id(args[0])
+    opts = { :id => args[0] }
 
-    ward = new_ward()
-    deleted = ward.delete(id)
+    ward = ward_connect()
+    deleted = ward.delete(opts)
 
     if deleted
-      $stdout.puts "Deleted password for #{format_id(id)}."
+      $stdout.puts "Deleted password for #{opts[:id]}."
     else
-      $stdout.puts "No password for #{format_id(id)}."
+      $stdout.puts "No password for #{opts[:id]}."
     end
   end
 
   def generate(args)
-    if args.length > 2
+    if args.length > 1
       raise CommandError, $generate_usage
     end
     
     opts = {}
-    ward = new_ward()
+    ward = ward_connect()
 
     case args.length
       # ward gen
@@ -169,13 +160,7 @@ private
       # ward gen gmail.com
       # ward gen chris@gmail.com
       when 1
-        opts.merge!(parse_username_domain(args[0]))
-
-      # ward gen gmail.com gmail
-      # ward gen chris@gmail.com gmail
-      when 2
-        opts.merge!(parse_username_domain(args[0]))
-        opts.merge!(:nick => args[1])
+        opts.merge!(:id => args[0])
     end
 
     opts.merge!(:password => generate_password())
@@ -183,9 +168,9 @@ private
     created = ward.set(opts)
 
     if created
-      $stdout.puts "Generated password for #{format_id(opts)}."
+      $stdout.puts "Generated password for #{opts[:id]}."
     else
-      $stdout.puts "Updated password for #{format_id(opts)} with generated value."
+      $stdout.puts "Updated password for #{opts[:id]} with generated value."
     end
   end
 
@@ -197,63 +182,21 @@ private
     # ward cp fb
     # ward cp bar.com
     # ward cp foo@bar.com
-    id = parse_id(args[0])
+    opts = { :id => args[0] }
 
-    ward = new_ward()
-    password = ward.get(id)
+    ward = ward_connect()
+    password = ward.get(opts)
 
     if password.nil?
-      $stderr.puts "No password for #{format_id(id)}."
+      $stderr.puts "No password for #{opts[:id]}."
     else
       Clipboard.copy password
       if Clipboard.paste == password
-        $stdout.puts "Password for #{format_id(id)} copied to clipboard."
+        $stdout.puts "Password for #{opts[:id]} copied to clipboard."
       else
-        $stderr.puts "Failed to copy password for #{format_id(id)} to clipboard."
+        $stderr.puts "Failed to copy password for #{opts[:id]} to clipboard."
       end
     end
-  end
-
-  def format_id(opts)
-    return nil if opts.nil? || opts.empty?
-
-    username = opts[:username]
-    domain = opts[:domain]
-    nick = opts[:nick]
-
-    return nil if domain.nil? && nick.nil?
-
-    if username.nil? && domain.nil?
-      "#{nick}"
-    else
-      if username.nil?
-        nick.nil? ? domain : "#{domain} (#{nick})"
-      else
-        nick.nil? ? "#{username}@#{domain}" : "#{username}@#{domain} (#{nick})"
-      end
-    end
-  end
-
-  def parse_id(string)
-    opts = parse_username_domain(string)
-    if opts[:domain] =~ /\./
-      opts
-    else
-      { :nick => opts[:domain] }
-    end
-  end
-
-  def parse_username_domain(string)
-    opts = {}
-
-    if string =~ /@/
-      parts = string.split('@')
-      opts[:username], opts[:domain] = parts.map(&:strip)
-    else
-      opts[:domain] = string.strip
-    end
-
-    return opts
   end
 
   def generate_password
@@ -261,33 +204,18 @@ private
   end
 
   def prompt_all_set
-    {}.merge!(prompt_domain())
-      .merge!(prompt_password_username_nick())
+    {}.merge!(prompt_name())
+      .merge!(prompt_password())
   end
 
   def prompt_all_generate
-    {}.merge!(prompt_domain())
-      .merge!(prompt_username_nick())
+    {}.merge!(prompt_name())
   end
 
-  def prompt_password_username_nick
-    {}.merge!(prompt_password())
-      .merge!(prompt_username_nick())
-  end
-
-  def prompt_password_nick
-    {}.merge!(prompt_password())
-      .merge!(prompt_nick())
-  end
-
-  def prompt_username_nick
-    {}.merge!(prompt_username())
-      .merge!(prompt_nick())
-  end
-
-  def prompt_domain
+  def prompt_name
+    # TODO: Validate input.
     $stderr.print 'Domain: '
-    { :domain => $stdin.gets.strip }
+    { :id => $stdin.gets.strip }
   end
 
   def prompt_password
@@ -309,26 +237,6 @@ private
     { :password => password }
   end
 
-  def prompt_username
-    $stderr.print 'Username (optional): '
-    username = $stdin.gets.strip
-    if !username.empty?
-      { :username => username }
-    else
-      {}
-    end
-  end
-
-  def prompt_nick
-    $stderr.print 'Nickname (optional): '
-    nick = $stdin.gets.strip
-    if !nick.empty?
-      { :nick => nick }
-    else
-      {}
-    end
-  end
-
   def get_password
     $stdin.noecho { |stdin|
       password = stdin.gets.sub(/[\r\n]+\z/, '')
@@ -338,7 +246,7 @@ private
     }
   end
 
-  def new_ward
+  def ward_connect
     begin
       $stderr.print 'Master password: '
       master_password = get_password()
@@ -349,10 +257,6 @@ private
     end
 
     return ward
-  end
-
-  def usage
-    $stderr.puts $usage
   end
 end
 
@@ -373,16 +277,13 @@ Usage:
 
   ward set
   ward set [user@]<domain> [password]
-  ward set [user@]<domain> <password> <nickname>
 
 Examples:
 
   ward set gmail.com
   ward set gmail.com p4ssw0rd
-  ward set gmail.com p4ssw0rd gmail
   ward set chris@gmail.com
   ward set chris@gmail.com p4ssw0rd
-  ward set chris@gmail.com p4ssw0rd gmail
 
 Alias: s, set
 USAGE
@@ -390,7 +291,6 @@ USAGE
 $get_usage = <<USAGE
 Usage:
 
-  ward get <nickname>
   ward get [user@]<domain>
 
 Examples:
@@ -405,7 +305,6 @@ USAGE
 $delete_usage = <<USAGE
 Usage:
 
-  ward del <nickname>
   ward del [user@]<domain>
 
 Examples:
@@ -421,15 +320,13 @@ $generate_usage = <<USAGE
 Usage:
 
   ward gen
-  ward gen [user@]<domain> [nickname]
+  ward gen [user@]<domain>
 
 Examples:
 
   ward gen
   ward gen gmail.com
   ward gen chris@gmail.com
-  ward gen gmail.com gmail
-  ward gen chris@gmail.com gmail
 
 Alias: gen, generate
 USAGE
@@ -437,7 +334,6 @@ USAGE
 $copy_usage = <<USAGE
 Usage:
 
-  ward cp <nickname>
   ward cp [user@]<domain>
 
 Examples:

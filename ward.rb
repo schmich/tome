@@ -20,18 +20,16 @@ class Ward
   # if parameters are invalid.
   def set(opts = {})
     if opts.nil? || opts.empty?
-      raise WardError, 'You must specify a domain or nickname.'
+      raise WardError, 'You must specify a domain.'
     end
 
     created = false
 
     writable_store do |store|
-      if !opts[:domain].nil?
-        created = set_by_username_domain(store, opts)
-      elsif !opts[:nick].nil?
-        created = set_by_nick(store, opts)
+      if !opts[:id].nil?
+        created = set_entry(store, opts)
       else
-        raise WardError, 'You must specify a domain or nickname.'
+        raise WardError, 'You must specify a domain.'
       end
     end
 
@@ -39,15 +37,17 @@ class Ward
   end
 
   def get(opts = {})
-    return nil if opts.nil? || opts.empty?
+    if opts.nil? || opts.empty?
+      raise WardError, 'You must specify a domain.'
+    end
 
     password = nil
 
     readable_store do |store|
-      if !opts[:nick].nil?
-        password = get_by_nick(store, opts)
+      if !opts[:id].nil?
+        password = get_entry(store, opts)
       else
-        password = get_by_username_domain(store, opts)
+        raise WardError, 'You must specify a domain.'
       end
     end
 
@@ -55,15 +55,17 @@ class Ward
   end
 
   def delete(opts = {})
-    return if opts.nil? || opts.empty?
+    if opts.nil? || opts.empty?
+      raise WardError, 'You must specify a domain.'
+    end
 
     deleted = false
 
     writable_store do |store|
-      if !opts[:nick].nil?
-        deleted = delete_by_nick(store, opts)
+      if !opts[:id].nil?
+        deleted = delete_entry(store, opts)
       else
-        deleted = delete_by_username_domain(store, opts)
+        raise WardError, 'You must specify a domain.'
       end
     end
 
@@ -71,110 +73,42 @@ class Ward
   end
 
 private
-  def set_by_nick(store, opts)
-    entry = entry_by_nick(store, opts)
-
-    if entry.nil? || entry.last.nil?
-      raise WardError, "No information found for nickname #{opts[:nick]}."
-    end
-
-    entry.last[:password] = opts[:password]
-
-    return false
-  end
-
-  def set_by_username_domain(store, opts)
-    key = format_store_key(opts)
-    return false if key.nil?
-
-    ensure_nick_unique(store, opts)
-
+  def set_entry(store, opts)
+    key = opts[:id]
     created = !store.include?(key)
 
     store[key] = {}
-    store[key][:username] = opts[:username]
-    store[key][:domain] = opts[:domain]
     store[key][:password] = opts[:password]
-    store[key][:nick] = opts[:nick]
 
     return created
   end
 
-  def ensure_nick_unique(store, opts)
-    nick = opts[:nick]
-    return if nick.nil?
-
-    entry = entry_by_nick(store, opts)
-    return if entry.nil? || entry.last.nil?
-
-    domain = opts[:domain]
-    username = opts[:username]
-
-    if domain.casecmp(entry.last[:domain]) != 0
-      raise WardError, "Nickname #{nick} is already in use."
-    end
-
-    if !username.nil?
-      if username.casecmp(entry.last[:username]) != 0
-        raise WardError, "Nickname #{nick} is already in use."
-      end
-    end
-  end
-
-  def get_by_username_domain(store, opts)
-    entry = entry_by_username_domain(store, opts)
+  def get_entry(store, opts)
+    entry = find_entry(store, opts)
 
     return nil if entry.nil? || entry.last.nil?
 
     return entry.last[:password]
   end
 
-  def get_by_nick(store, opts)
-    entry = entry_by_nick(store, opts)
-
-    return nil if entry.nil? || entry.last.nil?
-
-    return entry.last[:password]
-  end
-
-  def entry_by_username_domain(store, opts)
-    find_key = format_store_key(opts)
-    return nil if find_key.nil?
-
-    return store.find { |key, info|
-      !key.nil? && key.casecmp(find_key) == 0
-    }
-  end
-
-  def entry_by_nick(store, opts)
-    nick = opts[:nick]
-    return nil if nick.nil?
-
-    return store.find { |key, info|
-      !info[:nick].nil? && info[:nick].casecmp(nick) == 0
-    }
-  end
-
-  def delete_by_username_domain(store, opts)
-    key = format_store_key(opts)
-    return false if key.nil?
-
-    same = store.reject! { |entry_key, info|
-      entry_key.casecmp(key) == 0
-    }.nil?
-
-    return !same
-  end
-
-  def delete_by_nick(store, opts)
-    nick = opts[:nick]
-    return nil if nick.nil?
+  def delete_entry(store, opts)
+    name = opts[:id]
+    return false if name.nil?
 
     same = store.reject! { |key, info|
-      !info[:nick].nil? && info[:nick].casecmp(nick) == 0
+      key.casecmp(name) == 0
     }.nil?
 
     return !same
+  end
+
+  def find_entry(store, opts)
+    name = opts[:id]
+    return nil if name.nil?
+
+    return store.find { |key, info|
+      !key.nil? && key.casecmp(name) == 0
+    }
   end
   
   def load_store()
@@ -276,19 +210,6 @@ private
       :iv => Crypt.new_iv,
       :stretch => @default_stretch
     }
-  end
-
-  def format_store_key(opts)
-    username = opts[:username]
-    domain = opts[:domain]
-
-    return nil if domain.nil?
-
-    if username.nil?
-      domain
-    else
-      "#{username}@#{domain}"
-    end
   end
 
   def authenticate
