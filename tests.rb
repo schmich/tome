@@ -21,7 +21,7 @@ class TestWard < Test::Unit::TestCase
   end
 
   def test_set_fail
-    assert_raise(WardError) {
+    assert_raise(ArgumentError) {
       @ward.set({})
     }
   end

@@ -24,17 +24,13 @@ class Ward
       raise ArgumentError
     end
 
-    created = false
-
-    writable_store do |store|
+    return writable_store do |store|
       if !opts[:id].nil?
-        created = set_by_id(store, opts)
+        set_by_id(store, opts)
       else
         raise ArgumentError
       end
     end
-
-    return created
   end
 
   def get(opts = {})
@@ -42,19 +38,15 @@ class Ward
       raise ArgumentError
     end
 
-    password = nil
-
-    readable_store do |store|
+    return readable_store do |store|
       if !opts[:id].nil?
-        password = get_by_id(store, opts)
+        get_by_id(store, opts)
       elsif !opts[:pattern].nil?
-        password = get_by_pattern(store, opts)
+        get_by_pattern(store, opts)
       else
         raise ArgumentError
       end
     end
-
-    return password
   end
 
   def delete(opts = {})
@@ -62,35 +54,41 @@ class Ward
       raise ArgumentError
     end
 
-    deleted = false
-
-    writable_store do |store|
+    return writable_store do |store|
       if !opts[:id].nil?
-        deleted = delete_entry(store, opts)
+        delete_entry(store, opts)
       else
         raise ArgumentError
       end
     end
-
-    return deleted
   end
 
 private
   def set_by_id(store, opts)
     id = opts[:id]
 
+    created = !store.include?(id)
+
     store[id] = {}
     store[id][:password] = opts[:password]
 
-    return id
+    return created
   end
 
-  def get_entry(store, opts)
-    entry = find_entry_by_id(store, opts)
+  def get_by_id(store, opts)
+    entry = find_by_id(store, opts[:id])
 
     return nil if entry.nil? || entry.last.nil?
 
     return entry.last[:password]
+  end
+
+  def get_by_pattern(store, opts)
+    key, info = find_by_pattern(store, opts[:pattern])
+
+    return nil if key.nil? || info.nil?
+
+    return info[:password]
   end
 
   def delete_entry(store, opts)
@@ -104,30 +102,29 @@ private
     return !same
   end
 
-  def find_entry_by_id(store, opts)
-    name = opts[:id]
-    return nil if name.nil?
+  def find_by_id(store, id)
+    return nil if id.nil?
 
     return store.find { |key, info|
-      !key.nil? && key.casecmp(name) == 0
+      !key.nil? && key.casecmp(id) == 0
     }
   end
 
-  def find_entry_by_pattern(store, pattern)
-    return [] if pattern.nil?
+  def find_by_pattern(store, pattern)
+    return nil if pattern.nil?
 
-    entries = store.select { |key, info|
+    matching = store.select { |key, info|
       key =~ /#{pattern}/i
     }
 
-    if entries.empty?
+    if matching.empty?
       raise IdNotFoundError, "No entries found matching \"#{pattern}\"."
-    elsif entries.count > 1
+    elsif matching.count > 1
       # Return matching IDs.
       raise AmbiguousPatternError, "\"#{pattern}\" is ambiguous, multiple entries found."
     end
 
-    return entries[0]
+    return matching.first
   end
   
   def load_store()
@@ -200,10 +197,12 @@ private
     values = load_store || new_store
     store = values[:store]
 
-    yield store
+    result = yield store
 
     store = nil
     GC.start
+
+    return result
   end
 
   def writable_store()
@@ -214,12 +213,14 @@ private
     iv = values[:iv]
     stretch = values[:stretch]
 
-    yield store
+    result = yield store
 
     save_store(store, salt, iv, stretch)
     store = nil
 
     GC.start
+
+    return result
   end
 
   def new_store

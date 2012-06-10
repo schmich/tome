@@ -147,7 +147,7 @@ private
     password = ward.get(opts)
 
     if password.nil?
-      $stderr.puts "No password for #{opts[:pattern]}."
+      $stderr.puts "No password found for #{opts[:pattern]}."
     else
       $stdout.puts password
     end
@@ -169,7 +169,7 @@ private
     if deleted
       $stdout.puts "Deleted password for #{opts[:id]}."
     else
-      $stdout.puts "No password for #{opts[:id]}."
+      $stdout.puts "No password found for #{opts[:id]}."
     end
   end
 
@@ -211,19 +211,19 @@ private
     # ward cp fb
     # ward cp bar.com
     # ward cp foo@bar.com
-    opts = { :id => args[0] }
+    opts = { :pattern => args[0] }
 
     ward = ward_connect()
     password = ward.get(opts)
 
     if password.nil?
-      $stderr.puts "No password for #{opts[:id]}."
+      $stderr.puts "No password found for #{opts[:pattern]}."
     else
       Clipboard.copy password
       if Clipboard.paste == password
-        $stdout.puts "Password for #{opts[:id]} copied to clipboard."
+        $stdout.puts "Password for #{opts[:pattern]} copied to clipboard."
       else
-        $stderr.puts "Failed to copy password for #{opts[:id]} to clipboard."
+        $stderr.puts "Failed to copy password for #{opts[:pattern]} to clipboard."
       end
     end
   end
@@ -233,15 +233,15 @@ private
   end
 
   def prompt_all_set
-    {}.merge!(prompt_name())
+    {}.merge!(prompt_id())
       .merge!(prompt_password())
   end
 
   def prompt_all_generate
-    {}.merge!(prompt_name())
+    {}.merge!(prompt_id())
   end
 
-  def prompt_name
+  def prompt_id
     # TODO: Validate input.
     $stderr.print 'Domain: '
     { :id => $stdin.gets.strip }
