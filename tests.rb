@@ -16,26 +16,32 @@ class TestWard < Test::Unit::TestCase
   end
 
   def test_set
-    created = @ward.set($dph)
+    created = @ward.set('foo.com', 'bar')
     assert(created)
   end
 
-  def test_set_fail
+  def test_set_no_id_fail
     assert_raise(ArgumentError) {
-      @ward.set({})
+      @ward.set(nil, 'bar')
+    }
+  end
+
+  def test_set_no_password_fail
+    assert_raise(ArgumentError) {
+      @ward.set('foo.com', nil)
     }
   end
 
   def test_set_get
-    @ward.set($dph)
+    @ward.set('foo.com', 'bar')
     find = @ward.find('foo.com')
     assert_equal('bar', find['foo.com'])
   end
 
   def test_set_update
-    created = @ward.set($dph)
+    created = @ward.set('foo.com', 'bar')
     assert(created)
-    created = @ward.set($dph)
+    created = @ward.set('foo.com', 'bar')
     assert(!created)
   end
 
@@ -45,7 +51,7 @@ class TestWard < Test::Unit::TestCase
   end
 
   def test_set_delete
-    created = @ward.set($dph)
+    created = @ward.set('foo.com', 'bar')
     assert(created)
     deleted = @ward.delete($dh)
     assert(deleted)
@@ -57,7 +63,7 @@ class TestWard < Test::Unit::TestCase
   end
 
   def test_set_delete_find_fail
-    created = @ward.set($dph)
+    created = @ward.set('foo.com', 'bar')
     assert(created)
     find = @ward.find('foo.com')
     assert_equal('bar', find['foo.com'])
@@ -68,9 +74,9 @@ class TestWard < Test::Unit::TestCase
   end
 
   def test_many_set_find
-    created = @ward.set($dph)
+    created = @ward.set('foo.com', 'bar')
     assert(created)
-    created = @ward.set($DPh)
+    created = @ward.set('baz.com', 'quux')
     assert(created)
     find = @ward.find('foo.com')
     assert_equal('bar', find['foo.com'])
@@ -79,9 +85,9 @@ class TestWard < Test::Unit::TestCase
   end
 
   def test_find_pattern
-    created = @ward.set({ :id => 'foo@bar.com', :password => 'foo' })
+    created = @ward.set('foo@bar.com', 'foo')
     assert(created)
-    created = @ward.set({ :id => 'baz@bar.com', :password => 'baz' })
+    created = @ward.set('baz@bar.com', 'baz')
     assert(created)
     matches = @ward.find('bar.com')
     assert_equal('foo', matches['foo@bar.com'])
