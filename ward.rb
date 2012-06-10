@@ -8,7 +8,12 @@ end
 class IdNotFoundError < RuntimeError
 end
 
-class AmbiguousPatternError < RuntimeError
+class MultipleMatchError < RuntimeError
+  attr_reader :matches
+
+  def initialize(matches)
+    @matches = matches
+  end
 end
 
 class Ward
@@ -105,6 +110,8 @@ private
   def find_by_id(store, id)
     return nil if id.nil?
 
+    # TODO: Throw IdNotFoundError?
+
     return store.find { |key, info|
       !key.nil? && key.casecmp(id) == 0
     }
@@ -113,15 +120,17 @@ private
   def find_by_pattern(store, pattern)
     return nil if pattern.nil?
 
+    # TODO: Better matching. Should allow separated
+    # substring matching. Solid substrings > separated substrings.
     matching = store.select { |key, info|
       key =~ /#{pattern}/i
     }
 
     if matching.empty?
-      raise IdNotFoundError, "No entries found matching \"#{pattern}\"."
+      raise IdNotFoundError
     elsif matching.count > 1
       # Return matching IDs.
-      raise AmbiguousPatternError, "\"#{pattern}\" is ambiguous, multiple entries found."
+      raise MultipleMatchError, matching.map { |key, info| key }
     end
 
     return matching.first

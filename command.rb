@@ -143,14 +143,8 @@ private
     # ward get foo@bar.com
     opts = { :pattern => args[0] }
 
-    ward = ward_connect()
-    password = ward.get(opts)
-
-    if password.nil?
-      $stderr.puts "No password found for #{opts[:pattern]}."
-    else
-      $stdout.puts password
-    end
+    password = find_password(opts)
+    $stdout.puts password
   end
 
   def delete(args)
@@ -186,8 +180,8 @@ private
       when 0
         opts.merge!(prompt_all_generate())
 
-      # ward gen gmail.com
-      # ward gen chris@gmail.com
+      # ward gen bar.com
+      # ward gen foo@bar.com
       when 1
         opts.merge!(:id => args[0])
     end
@@ -213,18 +207,29 @@ private
     # ward cp foo@bar.com
     opts = { :pattern => args[0] }
 
-    ward = ward_connect()
-    password = ward.get(opts)
+    password = find_password(opts)
 
-    if password.nil?
-      $stderr.puts "No password found for #{opts[:pattern]}."
+    Clipboard.copy password
+    if Clipboard.paste == password
+      $stdout.puts "Password for #{opts[:pattern]} copied to clipboard."
     else
-      Clipboard.copy password
-      if Clipboard.paste == password
-        $stdout.puts "Password for #{opts[:pattern]} copied to clipboard."
-      else
-        $stderr.puts "Failed to copy password for #{opts[:pattern]} to clipboard."
-      end
+      $stderr.puts "Failed to copy password for #{opts[:pattern]} to clipboard."
+    end
+  end
+
+  def find_password(opts)
+    begin
+      ward = ward_connect()
+      return ward.get(opts)
+    rescue IdNotFoundError
+      raise CommandError, "No password found for #{opts[:pattern]}."
+    rescue MultipleMatchError => error
+      message = "Found multiple matches for #{opts[:pattern]}. Did you mean one of the following?\n\n"
+      error.matches.each { |match|
+        message += "\t#{match}\n"
+      }
+
+      raise CommandError, message
     end
   end
 
@@ -317,8 +322,8 @@ Examples:
   ward set
   ward set gmail.com
   ward set gmail.com p4ssw0rd
-  ward set chris@gmail.com
-  ward set chris@gmail.com p4ssw0rd
+  ward set foo@gmail.com
+  ward set foo@gmail.com p4ssw0rd
 
 Alias: set, s
 USAGE
@@ -332,7 +337,7 @@ Examples:
 
   ward get gmail
   ward get gmail.com
-  ward get chris@gmail.com
+  ward get foo@gmail.com
 
 Alias: get, g, show
 USAGE
@@ -346,7 +351,7 @@ Examples:
 
   ward delete gmail
   ward delete gmail.com
-  ward delete chris@gmail.com
+  ward delete foo@gmail.com
 
 Alias: delete, del, d, remove, rm
 USAGE
@@ -361,7 +366,7 @@ Examples:
 
   ward generate
   ward generate gmail.com
-  ward generate chris@gmail.com
+  ward generate foo@gmail.com
 
 Alias: generate, gen
 USAGE
@@ -375,7 +380,7 @@ Examples:
 
   ward copy gmail
   ward copy gmail.com
-  ward copy chris@gmail.com
+  ward copy foo@gmail.com
 
 Alias: copy, cp
 USAGE
