@@ -13,17 +13,13 @@ class Ward
     authenticate()
   end
 
-  def set(opts = {})
-    if opts.nil? || opts.empty? || opts[:password].nil?
+  def set(id, password)
+    if id.nil? || id.empty? || password.nil? || password.empty?
       raise ArgumentError
     end
 
     return writable_store do |store|
-      if !opts[:id].nil?
-        set_by_id(store, opts)
-      else
-        raise ArgumentError
-      end
+      set_by_id(store, id, password)
     end
   end
 
@@ -62,13 +58,11 @@ class Ward
   end
 
 private
-  def set_by_id(store, opts)
-    id = opts[:id]
-
+  def set_by_id(store, id, password)
     created = !store.include?(id)
 
     store[id] = {}
-    store[id][:password] = opts[:password]
+    store[id][:password] = password
 
     return created
   end

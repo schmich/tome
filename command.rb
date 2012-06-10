@@ -78,36 +78,37 @@ private
       raise CommandError, $set_usage
     end
     
-    opts = {}
     ward = ward_connect()
 
     case args.length
       # ward set
       when 0
-        opts.merge!(prompt_all_set())
+        id = prompt_id()
+        password = prompt_password()
 
       # TODO: Validate that first argument is in [username@]domain form.
 
       # ward set bar.com
       # ward set foo@bar.com
       when 1
-        opts.merge!(:id => args[0])
-        opts.merge!(prompt_password)
+        id = args[0]
+        password = prompt_password()
 
       # ward set bar.com p4ssw0rd
       # ward set foo@bar.com p4ssw0rd
       when 2
-        opts.merge!(:id => args[0], :password => args[1])
+        id = args[0]
+        password = args[1]
     end
 
-    created = ward.set(opts)
+    created = ward.set(id, password)
     if created
       $stdout.print 'Created '
     else
       $stdout.print 'Updated '
     end
 
-    $stdout.puts "password for #{opts[:id]}."
+    $stdout.puts "password for #{id}."
   end
 
   def get(args)
@@ -159,28 +160,28 @@ private
       raise CommandError, $generate_usage
     end
     
-    opts = {}
     ward = ward_connect()
 
     case args.length
       # ward gen
       when 0
-        opts.merge!(prompt_all_generate())
+        id = prompt_id()
 
       # ward gen bar.com
       # ward gen foo@bar.com
       when 1
-        opts.merge!(:id => args[0])
+        id = args[0]
     end
 
-    opts.merge!(:password => generate_password())
-
-    created = ward.set(opts)
+    password = generate_password()
+    created = ward.set(id, password)
 
     if created
-      $stdout.puts "Generated password for #{opts[:id]}."
+      $stdout.puts "Generated password for #{id}:"
+      $stdout.puts password
     else
-      $stdout.puts "Updated password for #{opts[:id]} with generated value."
+      $stdout.puts "Updated password for #{id}:"
+      $stdout.puts password
     end
   end
 
@@ -198,9 +199,9 @@ private
     matches = ward.find(pattern)
 
     if matches.empty?
-      raise CommandError, "No password found for #{opts[:pattern]}."
+      raise CommandError, "No password found for #{pattern}."
     elsif matches.count > 1
-      message = "Found multiple matches for #{opts[:pattern]}. Did you mean one of the following?\n\n"
+      message = "Found multiple matches for #{pattern}. Did you mean one of the following?\n\n"
       error.matches.each { |match|
         message += "\t#{match}\n"
       }
@@ -220,19 +221,10 @@ private
     Passgen.generate(:length => 20, :symbols => true)
   end
 
-  def prompt_all_set
-    {}.merge!(prompt_id())
-      .merge!(prompt_password())
-  end
-
-  def prompt_all_generate
-    {}.merge!(prompt_id())
-  end
-
   def prompt_id
     # TODO: Validate input.
     $stderr.print 'Domain: '
-    { :id => $stdin.gets.strip }
+    $stdin.gets.strip
   end
 
   def prompt_password
@@ -256,7 +248,7 @@ private
       retry
     end
 
-    { :password => password }
+    return password
   end
 
   def input_password
