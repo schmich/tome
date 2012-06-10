@@ -28,9 +28,6 @@ private
     rescue CommandError => error
       $stderr.puts error.message
       return 2
-    rescue WardError => error
-      $stderr.puts error.message
-      return 3
     end
 
     return 0
@@ -45,34 +42,34 @@ private
     case command
       when /\A(new|n)\z/i
         args.shift
-        new_entry(args)
+        do_new(args)
 
       when /\A(update|u|set|s)\z/i
         args.shift
-        update(args)
+        do_update(args)
 
       when /\A(g|get|show)\z/i
         args.shift
-        get(args)
+        do_get(args)
 
       when /\A(d|del|delete|rm|remove)\z/i
         args.shift
-        delete(args)
+        do_delete(args)
 
       when /\A(gen|generate)\z/i
         args.shift
-        generate(args)
+        do_generate(args)
 
       when /\A(cp|copy)\z/i
         args.shift
-        copy(args)
+        do_copy(args)
 
       else
         raise CommandError, "Unrecognized command: #{command}." 
     end
   end
 
-  def new_entry(args)
+  def do_new(args)
     if args.length > 2
       raise CommandError, $new_usage
     end
@@ -103,7 +100,7 @@ private
     $stdout.puts "Created password for #{id}."
   end
 
-  def update(args)
+  def do_update(args)
     if args.length > 2
       raise CommandError, $update_usage
     end
@@ -134,7 +131,7 @@ private
     $stdout.puts "Updated password for #{id}."
   end
 
-  def get(args)
+  def do_get(args)
     if args.length != 1
       raise CommandError, $get_usage
     end
@@ -154,7 +151,7 @@ private
     end
   end
 
-  def delete(args)
+  def do_delete(args)
     if args.length != 1
       raise CommandError, $delete_usage
     end
@@ -174,7 +171,7 @@ private
     end
   end
 
-  def generate(args)
+  def do_generate(args)
     if args.length > 1
       raise CommandError, $generate_usage
     end
@@ -204,7 +201,7 @@ private
     end
   end
 
-  def copy(args)
+  def do_copy(args)
     if args.length != 1
       raise CommandError, $copy_usage
     end

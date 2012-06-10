@@ -5,7 +5,10 @@ require 'crypt'
 class MasterPasswordError < RuntimeError
 end
 
-class WardError < RuntimeError
+class IdNotFoundError < RuntimeError
+end
+
+class AmbiguousPatternError < RuntimeError
 end
 
 class Ward
@@ -16,11 +19,9 @@ class Ward
     authenticate()
   end
 
-  # TODO: Return a value or throw an exception
-  # if parameters are invalid.
   def set(opts = {})
     if opts.nil? || opts.empty?
-      raise WardError, 'You must specify an ID or pattern.'
+      raise ArgumentError
     end
 
     id = nil
@@ -31,7 +32,7 @@ class Ward
       elsif !opts[:pattern].nil?
         id = set_by_pattern(store, opts)
       else
-        raise WardError, 'You must specify a domain.'
+        raise ArgumentError
       end
     end
 
@@ -40,7 +41,7 @@ class Ward
 
   def get(opts = {})
     if opts.nil? || opts.empty?
-      raise WardError, 'You must specify a domain.'
+      raise ArgumentError
     end
 
     password = nil
@@ -49,7 +50,7 @@ class Ward
       if !opts[:id].nil?
         password = get_entry(store, opts)
       else
-        raise WardError, 'You must specify a domain.'
+        raise ArgumentError
       end
     end
 
@@ -58,7 +59,7 @@ class Ward
 
   def delete(opts = {})
     if opts.nil? || opts.empty?
-      raise WardError, 'You must specify a domain.'
+      raise ArgumentError
     end
 
     deleted = false
@@ -67,7 +68,7 @@ class Ward
       if !opts[:id].nil?
         deleted = delete_entry(store, opts)
       else
-        raise WardError, 'You must specify a domain.'
+        raise ArgumentError
       end
     end
 
@@ -87,15 +88,7 @@ private
   def set_by_pattern(store, opts)
     pattern = opts[:pattern]
 
-    entries = find_entries_by_pattern(store, pattern)
-
-    if entries.empty?
-      raise WardError, "No entries found matching \"#{pattern}\"."
-    elsif entries.count > 1
-      raise WardError, "\"#{pattern}\" is ambiguous, multiple entries found."
-    end
-
-    entry = entries.first
+    entry = find_entry_by_pattern(store, pattern)
 
     entry.last[:password] = opts[:password]
     return entry.first
@@ -129,12 +122,21 @@ private
     }
   end
 
-  def find_entries_by_pattern(store, pattern)
+  def find_entry_by_pattern(store, pattern)
     return [] if pattern.nil?
 
-    return store.select { |key, info|
+    entries = store.select { |key, info|
       key =~ /#{pattern}/i
     }
+
+    if entries.empty?
+      raise IdNotFoundError, "No entries found matching \"#{pattern}\"."
+    elsif entries.count > 1
+      # Return matching IDs.
+      raise AmbiguousPatternError, "\"#{pattern}\" is ambiguous, multiple entries found."
+    end
+
+    return entries[0]
   end
   
   def load_store()
