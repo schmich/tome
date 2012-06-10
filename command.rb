@@ -73,37 +73,6 @@ private
     end
   end
 
-  def do_new(args)
-    if args.length > 2
-      raise CommandError, $new_usage
-    end
-    
-    opts = {}
-    ward = ward_connect()
-
-    case args.length
-      # ward new
-      when 0
-        opts.merge!(prompt_all_new())
-
-      # TODO: Validate that first argument is in [username@]domain form.
-
-      # ward new bar.com
-      # ward new foo@bar.com
-      when 1
-        opts.merge!(:id => args[0])
-        opts.merge!(prompt_password)
-
-      # ward new bar.com p4ssw0rd
-      # ward new foo@bar.com p4ssw0rd
-      when 2
-        opts.merge!(:id => args[0], :password => args[1])
-    end
-
-    id = ward.set(opts)
-    $stdout.puts "Created password for #{id}."
-  end
-
   def set(args)
     if args.length > 2
       raise CommandError, $set_usage
