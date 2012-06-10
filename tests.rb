@@ -32,7 +32,7 @@ class TestWard < Test::Unit::TestCase
     }
   end
 
-  def test_set_get
+  def test_set_find
     @ward.set('foo.com', 'bar')
     find = @ward.find('foo.com')
     assert_equal('bar', find['foo.com'])
@@ -46,19 +46,19 @@ class TestWard < Test::Unit::TestCase
   end
 
   def test_find_fail
-    find = @ward.find($dh)
+    find = @ward.find('foo.com')
     assert_empty(find)
   end
 
   def test_set_delete
     created = @ward.set('foo.com', 'bar')
     assert(created)
-    deleted = @ward.delete($dh)
+    deleted = @ward.delete('foo.com')
     assert(deleted)
   end
 
   def test_delete_fail
-    deleted = @ward.delete($dh)
+    deleted = @ward.delete('foo.com')
     assert(!deleted)
   end
 
@@ -67,7 +67,7 @@ class TestWard < Test::Unit::TestCase
     assert(created)
     find = @ward.find('foo.com')
     assert_equal('bar', find['foo.com'])
-    deleted = @ward.delete($dh)
+    deleted = @ward.delete('foo.com')
     assert(deleted)
     find = @ward.find('foo.com')
     assert_empty(find)
@@ -93,19 +93,6 @@ class TestWard < Test::Unit::TestCase
     assert_equal('foo', matches['foo@bar.com'])
     assert_equal('baz', matches['baz@bar.com'])
   end
-
-  $d = 'foo.com'
-  $p = 'bar'
-  $n = 'quux'
-  $dh = { :id => $d }
-  $ph = { :password => $p }
-  $dph = $dh.merge($ph)
-
-  $D = 'baz.com'
-  $Dh = { :id => $D }
-  $P = 'quux'
-  $Ph = { :password => $P }
-  $DPh = $Dh.merge($Ph)
 end
 
 class TestCommand < Test::Unit::TestCase
