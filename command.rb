@@ -40,29 +40,25 @@ private
     end
 
     case command
-      when /\A(new|n)\z/i
+      when /\A(set|s)\z/i
         args.shift
-        do_new(args)
+        set(args)
 
-      when /\A(update|u|set|s)\z/i
+      when /\A(get|g|show)\z/i
         args.shift
-        do_update(args)
+        get(args)
 
-      when /\A(g|get|show)\z/i
+      when /\A(delete|del|d|rm|remove)\z/i
         args.shift
-        do_get(args)
+        delete(args)
 
-      when /\A(d|del|delete|rm|remove)\z/i
+      when /\A(generate|gen)\z/i
         args.shift
-        do_delete(args)
+        generate(args)
 
-      when /\A(gen|generate)\z/i
+      when /\A(copy|cp)\z/i
         args.shift
-        do_generate(args)
-
-      when /\A(cp|copy)\z/i
-        args.shift
-        do_copy(args)
+        copy(args)
 
       else
         raise CommandError, "Unrecognized command: #{command}." 
@@ -100,38 +96,44 @@ private
     $stdout.puts "Created password for #{id}."
   end
 
-  def do_update(args)
+  def set(args)
     if args.length > 2
-      raise CommandError, $update_usage
+      raise CommandError, $set_usage
     end
     
     opts = {}
     ward = ward_connect()
 
     case args.length
-      # ward update
+      # ward set
       when 0
-        opts.merge!(prompt_all_update())
+        opts.merge!(prompt_all_set())
 
       # TODO: Validate that first argument is in [username@]domain form.
 
-      # ward update bar.com
-      # ward update foo@bar.com
+      # ward set bar.com
+      # ward set foo@bar.com
       when 1
-        opts.merge!(:pattern => args[0])
+        opts.merge!(:id => args[0])
         opts.merge!(prompt_password)
 
-      # ward update bar.com p4ssw0rd
-      # ward update foo@bar.com p4ssw0rd
+      # ward set bar.com p4ssw0rd
+      # ward set foo@bar.com p4ssw0rd
       when 2
-        opts.merge!(:pattern => args[0], :password => args[1])
+        opts.merge!(:id => args[0], :password => args[1])
     end
 
-    id = ward.set(opts)
-    $stdout.puts "Updated password for #{id}."
+    created = ward.set(opts)
+    if created
+      $stdout.print 'Created '
+    else
+      $stdout.print 'Updated '
+    end
+
+    $stdout.puts "password for #{opts[:id]}."
   end
 
-  def do_get(args)
+  def get(args)
     if args.length != 1
       raise CommandError, $get_usage
     end
@@ -139,19 +141,19 @@ private
     # ward get fb
     # ward get bar.com
     # ward get foo@bar.com
-    opts = { :id => args[0] }
+    opts = { :pattern => args[0] }
 
     ward = ward_connect()
     password = ward.get(opts)
 
     if password.nil?
-      $stderr.puts "No password for #{opts[:id]}."
+      $stderr.puts "No password for #{opts[:pattern]}."
     else
       $stdout.puts password
     end
   end
 
-  def do_delete(args)
+  def delete(args)
     if args.length != 1
       raise CommandError, $delete_usage
     end
@@ -171,7 +173,7 @@ private
     end
   end
 
-  def do_generate(args)
+  def generate(args)
     if args.length > 1
       raise CommandError, $generate_usage
     end
@@ -201,7 +203,7 @@ private
     end
   end
 
-  def do_copy(args)
+  def copy(args)
     if args.length != 1
       raise CommandError, $copy_usage
     end
@@ -230,12 +232,7 @@ private
     Passgen.generate(:length => 20, :symbols => true)
   end
 
-  def prompt_all_new
-    {}.merge!(prompt_name())
-      .merge!(prompt_password())
-  end
-
-  def prompt_all_update
+  def prompt_all_set
     {}.merge!(prompt_name())
       .merge!(prompt_password())
   end
@@ -254,6 +251,11 @@ private
     begin
       $stderr.print 'Password: '
       password = get_password()
+
+      if password.empty?
+        $stderr.puts "Password cannot be blank. Use 'ward delete' to delete a password."
+        raise
+      end
 
       $stderr.print 'Password (verify): '
       verify = get_password()
@@ -296,8 +298,7 @@ end
 $usage = <<USAGE
 Usage:
 
-  ward new
-  ward update
+  ward set
   ward get
   ward delete
   ward generate
@@ -305,37 +306,21 @@ Usage:
   ward help
 USAGE
 
-$new_usage = <<USAGE
+$set_usage = <<USAGE
 Usage:
 
-  ward new
-  ward new [user@]<domain> [password]
+  ward set
+  ward set [user@]<domain> [password]
 
 Examples:
 
-  ward new
-  ward new gmail.com
-  ward new gmail.com p4ssw0rd
-  ward new chris@gmail.com
-  ward new chris@gmail.com p4ssw0rd
+  ward set
+  ward set gmail.com
+  ward set gmail.com p4ssw0rd
+  ward set chris@gmail.com
+  ward set chris@gmail.com p4ssw0rd
 
-Alias: new, n
-USAGE
-
-$update_usage = <<USAGE
-Usage:
-
-  ward update
-  ward update [user@]<domain> [password]
-
-Examples:
-
-  ward update gmail.com
-  ward update gmail.com p4ssw0rd
-  ward update chris@gmail.com
-  ward update chris@gmail.com p4ssw0rd
-
-Alias: update, u, set, s
+Alias: set, s
 USAGE
 
 $get_usage = <<USAGE

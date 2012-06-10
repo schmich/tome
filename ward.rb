@@ -20,23 +20,21 @@ class Ward
   end
 
   def set(opts = {})
-    if opts.nil? || opts.empty?
+    if opts.nil? || opts.empty? || opts[:password].nil?
       raise ArgumentError
     end
 
-    id = nil
+    created = false
 
     writable_store do |store|
       if !opts[:id].nil?
-        id = set_by_id(store, opts)
-      elsif !opts[:pattern].nil?
-        id = set_by_pattern(store, opts)
+        created = set_by_id(store, opts)
       else
         raise ArgumentError
       end
     end
 
-    return id
+    return created
   end
 
   def get(opts = {})
@@ -48,7 +46,9 @@ class Ward
 
     readable_store do |store|
       if !opts[:id].nil?
-        password = get_entry(store, opts)
+        password = get_by_id(store, opts)
+      elsif !opts[:pattern].nil?
+        password = get_by_pattern(store, opts)
       else
         raise ArgumentError
       end
@@ -77,21 +77,12 @@ class Ward
 
 private
   def set_by_id(store, opts)
-    key = opts[:id]
+    id = opts[:id]
 
-    store[key] = {}
-    store[key][:password] = opts[:password]
+    store[id] = {}
+    store[id][:password] = opts[:password]
 
-    return key
-  end
-
-  def set_by_pattern(store, opts)
-    pattern = opts[:pattern]
-
-    entry = find_entry_by_pattern(store, pattern)
-
-    entry.last[:password] = opts[:password]
-    return entry.first
+    return id
   end
 
   def get_entry(store, opts)
