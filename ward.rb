@@ -85,15 +85,11 @@ private
 
     return nil if entry.nil? || entry.last.nil?
 
-    return entry.last[:password]
+    return [entry]
   end
 
   def get_by_pattern(store, opts)
-    key, info = find_by_pattern(store, opts[:pattern])
-
-    return nil if key.nil? || info.nil?
-
-    return info[:password]
+    find_by_pattern(store, opts[:pattern])
   end
 
   def delete_entry(store, opts)
@@ -121,19 +117,17 @@ private
     return nil if pattern.nil?
 
     # TODO: Better matching. Should allow separated
-    # substring matching. Solid substrings > separated substrings.
-    matching = store.select { |key, info|
-      key =~ /#{pattern}/i
+    # substring matching. Exact match > solid substrings > separated substrings.
+
+    exact = store.select { |key, info|
+      key.casecmp(pattern) == 0
     }
 
-    if matching.empty?
-      raise IdNotFoundError
-    elsif matching.count > 1
-      # Return matching IDs.
-      raise MultipleMatchError, matching.map { |key, info| key }
-    end
+    return exact if !exact.empty?
 
-    return matching.first
+    return store.select { |key, info|
+      key =~ /#{pattern}/i
+    }
   end
   
   def load_store()

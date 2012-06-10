@@ -60,8 +60,16 @@ private
         args.shift
         copy(args)
 
+      when /\A(rename|ren|rn)\z/i
+        # TODO
+        $stderr.puts 'TODO'
+
+      when /\A(list|ls)\z/i
+        # TODO
+        $stderr.puts 'TODO'
+
       else
-        raise CommandError, "Unrecognized command: #{command}." 
+        raise CommandError, "Unrecognized command: #{command}.\n\n#{$usage}"
     end
   end
 
@@ -143,8 +151,18 @@ private
     # ward get foo@bar.com
     opts = { :pattern => args[0] }
 
-    password = find_password(opts)
-    $stdout.puts password
+    ward = ward_connect()
+    matches = ward.get(opts)
+
+    if matches.empty?
+      raise CommandError, "No password found for #{opts[:pattern]}."
+    elsif matches.count == 1
+      $stdout.puts matches.first.last[:password]
+    else
+      matches.each { |key, info|
+        $stdout.puts "#{key}: #{info[:password]}"
+      }
+    end
   end
 
   def delete(args)
@@ -255,7 +273,7 @@ private
   def prompt_password
     begin
       $stderr.print 'Password: '
-      password = get_password()
+      password = input_password()
 
       if password.empty?
         $stderr.puts "Password cannot be blank. Use 'ward delete' to delete a password."
@@ -263,7 +281,7 @@ private
       end
 
       $stderr.print 'Password (verify): '
-      verify = get_password()
+      verify = input_password()
 
       if verify != password
         $stderr.puts 'Passwords do not match.'
@@ -276,7 +294,7 @@ private
     { :password => password }
   end
 
-  def get_password
+  def input_password
     $stdin.noecho { |stdin|
       password = stdin.gets.sub(/[\r\n]+\z/, '')
       $stderr.puts
@@ -288,7 +306,7 @@ private
   def ward_connect
     begin
       $stderr.print 'Master password: '
-      master_password = get_password()
+      master_password = input_password()
       ward = Ward.new(@store_filename, master_password)
     rescue MasterPasswordError
       $stderr.puts 'Incorrect master password.'
@@ -304,10 +322,12 @@ $usage = <<USAGE
 Usage:
 
   ward set
-  ward get
-  ward delete
   ward generate
+  ward get
   ward copy
+  ward list
+  ward delete
+  ward rename
   ward help
 USAGE
 
