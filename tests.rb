@@ -78,6 +78,15 @@ class TestWard < Test::Unit::TestCase
     assert_equal($P, get)
   end
 
+  def test_ambiguous_pattern
+    created = @ward.set({ :id => 'foo@bar.com', :password => 'foo' })
+    assert(created)
+    created = @ward.set({ :id => 'baz@bar.com', :password => 'baz' })
+    assert_raise(MultipleMatchError) {
+      @ward.get({ :pattern => 'bar.com' })
+    }
+  end
+
   $d = 'foo.com'
   $p = 'bar'
   $n = 'quux'
