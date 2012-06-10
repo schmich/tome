@@ -5,17 +5,6 @@ require 'crypt'
 class MasterPasswordError < RuntimeError
 end
 
-class IdNotFoundError < RuntimeError
-end
-
-class MultipleMatchError < RuntimeError
-  attr_reader :matches
-
-  def initialize(matches)
-    @matches = matches
-  end
-end
-
 class Ward
   def initialize(store_filename, master_password, default_stretch = 100_000)
     @store_filename = store_filename
