@@ -20,20 +20,22 @@ class Ward
   # if parameters are invalid.
   def set(opts = {})
     if opts.nil? || opts.empty?
-      raise WardError, 'You must specify a domain.'
+      raise WardError, 'You must specify an ID or pattern.'
     end
 
-    created = false
+    id = nil
 
     writable_store do |store|
       if !opts[:id].nil?
-        created = set_entry(store, opts)
+        id = set_by_id(store, opts)
+      elsif !opts[:pattern].nil?
+        id = set_by_pattern(store, opts)
       else
         raise WardError, 'You must specify a domain.'
       end
     end
 
-    return created
+    return id
   end
 
   def get(opts = {})
@@ -73,18 +75,34 @@ class Ward
   end
 
 private
-  def set_entry(store, opts)
+  def set_by_id(store, opts)
     key = opts[:id]
-    created = !store.include?(key)
 
     store[key] = {}
     store[key][:password] = opts[:password]
 
-    return created
+    return key
+  end
+
+  def set_by_pattern(store, opts)
+    pattern = opts[:pattern]
+
+    entries = find_entries_by_pattern(store, pattern)
+
+    if entries.empty?
+      raise WardError, "No entries found matching \"#{pattern}\"."
+    elsif entries.count > 1
+      raise WardError, "\"#{pattern}\" is ambiguous, multiple entries found."
+    end
+
+    entry = entries.first
+
+    entry.last[:password] = opts[:password]
+    return entry.first
   end
 
   def get_entry(store, opts)
-    entry = find_entry(store, opts)
+    entry = find_entry_by_id(store, opts)
 
     return nil if entry.nil? || entry.last.nil?
 
@@ -102,12 +120,20 @@ private
     return !same
   end
 
-  def find_entry(store, opts)
+  def find_entry_by_id(store, opts)
     name = opts[:id]
     return nil if name.nil?
 
     return store.find { |key, info|
       !key.nil? && key.casecmp(name) == 0
+    }
+  end
+
+  def find_entries_by_pattern(store, pattern)
+    return [] if pattern.nil?
+
+    return store.select { |key, info|
+      key =~ /#{pattern}/i
     }
   end
   

@@ -28,6 +28,9 @@ private
     rescue CommandError => error
       $stderr.puts error.message
       return 2
+    rescue WardError => error
+      $stderr.puts error.message
+      return 3
     end
 
     return 0
@@ -40,9 +43,13 @@ private
     end
 
     case command
-      when /\A(s|set)\z/i
+      when /\A(new|n)\z/i
         args.shift
-        set(args)
+        new_entry(args)
+
+      when /\A(update|u|set|s)\z/i
+        args.shift
+        update(args)
 
       when /\A(g|get|show)\z/i
         args.shift
@@ -65,9 +72,9 @@ private
     end
   end
 
-  def set(args)
+  def new_entry(args)
     if args.length > 2
-      raise CommandError, $set_usage
+      raise CommandError, $new_usage
     end
     
     opts = {}
@@ -75,33 +82,56 @@ private
 
     case args.length
       # ward new
-      # ward set
       when 0
-        opts.merge!(prompt_all_set())
+        opts.merge!(prompt_all_new())
 
       # TODO: Validate that first argument is in [username@]domain form.
 
-      # ward set bar.com
-      # ward set foo@bar.com
+      # ward new bar.com
+      # ward new foo@bar.com
       when 1
         opts.merge!(:id => args[0])
         opts.merge!(prompt_password)
 
-      # ward set bar.com p4ssw0rd
-      # ward set foo@bar.com p4ssw0rd
+      # ward new bar.com p4ssw0rd
+      # ward new foo@bar.com p4ssw0rd
       when 2
         opts.merge!(:id => args[0], :password => args[1])
     end
 
-    created = ward.set(opts)
+    id = ward.set(opts)
+    $stdout.puts "Created password for #{id}."
+  end
 
-    if created
-      $stdout.print 'Created '
-    else
-      $stdout.print 'Updated '
+  def update(args)
+    if args.length > 2
+      raise CommandError, $update_usage
     end
     
-    $stdout.puts "password for #{opts[:id]}."
+    opts = {}
+    ward = ward_connect()
+
+    case args.length
+      # ward update
+      when 0
+        opts.merge!(prompt_all_update())
+
+      # TODO: Validate that first argument is in [username@]domain form.
+
+      # ward update bar.com
+      # ward update foo@bar.com
+      when 1
+        opts.merge!(:pattern => args[0])
+        opts.merge!(prompt_password)
+
+      # ward update bar.com p4ssw0rd
+      # ward update foo@bar.com p4ssw0rd
+      when 2
+        opts.merge!(:pattern => args[0], :password => args[1])
+    end
+
+    id = ward.set(opts)
+    $stdout.puts "Updated password for #{id}."
   end
 
   def get(args)
@@ -203,7 +233,12 @@ private
     Passgen.generate(:length => 20, :symbols => true)
   end
 
-  def prompt_all_set
+  def prompt_all_new
+    {}.merge!(prompt_name())
+      .merge!(prompt_password())
+  end
+
+  def prompt_all_update
     {}.merge!(prompt_name())
       .merge!(prompt_password())
   end
@@ -264,28 +299,46 @@ end
 $usage = <<USAGE
 Usage:
 
-  ward set
+  ward new
+  ward update
   ward get
-  ward del
-  ward gen
-  ward cp
+  ward delete
+  ward generate
+  ward copy
   ward help
 USAGE
 
-$set_usage = <<USAGE
+$new_usage = <<USAGE
 Usage:
 
-  ward set
-  ward set [user@]<domain> [password]
+  ward new
+  ward new [user@]<domain> [password]
 
 Examples:
 
-  ward set gmail.com
-  ward set gmail.com p4ssw0rd
-  ward set chris@gmail.com
-  ward set chris@gmail.com p4ssw0rd
+  ward new
+  ward new gmail.com
+  ward new gmail.com p4ssw0rd
+  ward new chris@gmail.com
+  ward new chris@gmail.com p4ssw0rd
 
-Alias: s, set
+Alias: new, n
+USAGE
+
+$update_usage = <<USAGE
+Usage:
+
+  ward update
+  ward update [user@]<domain> [password]
+
+Examples:
+
+  ward update gmail.com
+  ward update gmail.com p4ssw0rd
+  ward update chris@gmail.com
+  ward update chris@gmail.com p4ssw0rd
+
+Alias: update, u, set, s
 USAGE
 
 $get_usage = <<USAGE
@@ -299,48 +352,48 @@ Examples:
   ward get gmail.com
   ward get chris@gmail.com
 
-Alias: g, get, show
+Alias: get, g, show
 USAGE
 
 $delete_usage = <<USAGE
 Usage:
 
-  ward del [user@]<domain>
+  ward delete [user@]<domain>
 
 Examples:
 
-  ward del gmail
-  ward del gmail.com
-  ward del chris@gmail.com
+  ward delete gmail
+  ward delete gmail.com
+  ward delete chris@gmail.com
 
-Alias: d, del, delete, rm, remove
+Alias: delete, del, d, remove, rm
 USAGE
 
 $generate_usage = <<USAGE
 Usage:
 
-  ward gen
-  ward gen [user@]<domain>
+  ward generate
+  ward generate [user@]<domain>
 
 Examples:
 
-  ward gen
-  ward gen gmail.com
-  ward gen chris@gmail.com
+  ward generate
+  ward generate gmail.com
+  ward generate chris@gmail.com
 
-Alias: gen, generate
+Alias: generate, gen
 USAGE
 
 $copy_usage = <<USAGE
 Usage:
 
-  ward cp [user@]<domain>
+  ward copy [user@]<domain>
 
 Examples:
 
-  ward cp gmail
-  ward cp gmail.com
-  ward cp chris@gmail.com
+  ward copy gmail
+  ward copy gmail.com
+  ward copy chris@gmail.com
 
-Alias: cp, copy
+Alias: copy, cp
 USAGE
