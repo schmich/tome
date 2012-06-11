@@ -81,6 +81,7 @@ of every website you sign up with, you can use ward to help mitigate your risk a
   The encryption on the `.ward` file is meant to mitigate this danger. Brute-force decryption should take significant
   computing power and time. To further reduce risk, don't store usernames (e.g. do `ward set gmail.com` instead of `ward set foo@gmail.com`).
 * Dependence on the `.ward` file: if your `.ward` file is lost or corrupt and you forget your passwords, you'll have to reset them.
+* If you want access to your passwords on multiple machines, you'll have to sync the `.ward` file somehow.
 * Trust in *my* secure coding practices: I encourage you to look at the source yourself.
 
 ## Under the hood
@@ -98,7 +99,7 @@ and used for encryption.
   using the [Ruby OpenSSL library](http://www.ruby-doc.org/stdlib-1.9.3/libdoc/openssl/rdoc/index.html).
 * Key derivation:
  * [PBKDF2](http://en.wikipedia.org/wiki/PBKDF2)/[HMAC-SHA-512](http://en.wikipedia.org/wiki/SHA-2) with a master password.
- * [UUID](http://en.wikipedia.org/wiki/UUID)-based random [salt](http://en.wikipedia.org/wiki/Salt_%28cryptography%29)
+ * [UUID](http://en.wikipedia.org/wiki/UUID)-based random, probabilistically unique [salt](http://en.wikipedia.org/wiki/Salt_%28cryptography%29)
    from [SecureRandom#uuid](http://www.ruby-doc.org/stdlib-1.9.3/libdoc/securerandom/rdoc/SecureRandom.html#method-c-uuid).
  * Randomly-generated [IV](http://en.wikipedia.org/wiki/Initialization_vector) from [OpenSSL::Cipher#random_iv](http://www.ruby-doc.org/stdlib-1.9.3/libdoc/openssl/rdoc/OpenSSL/Cipher.html#method-i-random_iv).
  * 100,000 [key stretch](http://en.wikipedia.org/wiki/Key_stretching) iterations.
