@@ -34,8 +34,8 @@ class TestWard < Test::Unit::TestCase
 
   def test_set_find
     @ward.set('foo.com', 'bar')
-    find = @ward.find('foo.com')
-    assert_equal('bar', find['foo.com'])
+    matches = @ward.find('foo.com')
+    assert_equal('bar', matches['foo.com'])
   end
 
   def test_set_update
@@ -46,15 +46,15 @@ class TestWard < Test::Unit::TestCase
   end
 
   def test_find_fail
-    find = @ward.find('foo.com')
-    assert_empty(find)
+    matches = @ward.find('foo.com')
+    assert_empty(matches)
   end
 
   def test_set_find_fail
     created = @ward.set('foo.com', 'bar')
     assert(created)
-    find = @ward.find('bar.com')
-    assert_empty(find)
+    matches = @ward.find('bar.com')
+    assert_empty(matches)
   end
 
   def test_set_delete
@@ -72,12 +72,12 @@ class TestWard < Test::Unit::TestCase
   def test_set_delete_find_fail
     created = @ward.set('foo.com', 'bar')
     assert(created)
-    find = @ward.find('foo.com')
-    assert_equal('bar', find['foo.com'])
+    matches = @ward.find('foo.com')
+    assert_equal('bar', matches['foo.com'])
     deleted = @ward.delete('foo.com')
     assert(deleted)
-    find = @ward.find('foo.com')
-    assert_empty(find)
+    matches = @ward.find('foo.com')
+    assert_empty(matches)
   end
 
   def test_many_set_find
@@ -85,10 +85,10 @@ class TestWard < Test::Unit::TestCase
     assert(created)
     created = @ward.set('baz.com', 'quux')
     assert(created)
-    find = @ward.find('foo.com')
-    assert_equal('bar', find['foo.com'])
-    find = @ward.find('baz.com')
-    assert_equal('quux', find['baz.com'])
+    matches = @ward.find('foo.com')
+    assert_equal('bar', matches['foo.com'])
+    matches = @ward.find('baz.com')
+    assert_equal('quux', matches['baz.com'])
   end
 
   def test_find_pattern
