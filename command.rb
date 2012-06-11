@@ -284,10 +284,19 @@ private
     old_id = args[0]
     new_id = args[1]
 
+    overwriting = !ward.get(new_id).nil?
+    if overwriting
+      confirm = prompt_confirm("A password already exists for #{new_id}. Overwrite (y/n)? ")
+      if !confirm
+        @out.puts 'Aborted.'
+        return
+      end
+    end
+
     renamed = ward.rename(old_id, new_id)
     
     if !renamed
-      @err.puts "#{old_id} does not exist."
+      raise CommandError, "#{old_id} does not exist."
     else
       @out.puts "#{old_id} renamed to #{new_id}."
     end
