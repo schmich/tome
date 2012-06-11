@@ -6,12 +6,6 @@ require 'stringio'
 require 'clipboard'
 require 'yaml'
 
-class StringIO
-  def noecho
-    yield self
-  end
-end
-
 class TestWard < Test::Unit::TestCase
   def setup
     @ward_file = Tempfile.new('test')
@@ -174,6 +168,15 @@ class TestWard < Test::Unit::TestCase
   def test_rename_failed
     rename = @ward.rename('foo', 'bar')
     assert(!rename)
+  end
+end
+
+# StringIO#noecho does not appear to exist,
+# even though it's present on $stdout et al.
+# We need to define it for mocking the standard IOs.
+class StringIO
+  def noecho
+    yield self
   end
 end
 
