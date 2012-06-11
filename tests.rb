@@ -2,7 +2,14 @@ require 'ward'
 require 'command'
 require 'test/unit'
 require 'tempfile'
+require 'stringio'
 require 'yaml'
+
+class StringIO
+  def noecho
+    yield self
+  end
+end
 
 class TestWard < Test::Unit::TestCase
   def setup
@@ -180,10 +187,45 @@ class TestCommand < Test::Unit::TestCase
   end
 
   def cmd(*args)
-    WardCommand.run(@ward_file.path, args)
+    ward_args = args[0...args.length - 1]
+    input = args.last
+
+    stdout = StringIO.new('', 'w+')
+    stderr = StringIO.new('', 'w+')
+    stdin = StringIO.new(input, 'r')
+    exit = WardCommand.run(@ward_file.path, ward_args, stdout, stderr, stdin)
+
+    stdout.rewind
+    stderr.rewind
+
+    return {
+      :exit => exit,
+      :out => stdout,
+      :err => stderr
+    }
   end
 
   def test_set
+    c = cmd('set', 'foo.com', "test\nbar\nbar")
+    assert_equal(0, c[:exit])
+  end
+
+  def test_set_fail
+    c = cmd('set', '')
+    assert_equal(1, c[:exit])
+  end
+
+  def test_get
+    c = cmd('set', 'foo.com', "test\nbar\nbar")
+    assert_equal(0, c[:exit])
+    c = cmd('get', 'foo.com', "test\n")
+    assert_equal(0, c[:exit])
+    assert(c[:out].read =~ /bar/)
+  end
+
+  def test_get_fail
+    c = cmd('get', 'foo.com', "test\n")
+    assert_equal(1, c[:exit])
   end
 
   def test_set_alias
