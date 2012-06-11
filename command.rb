@@ -66,7 +66,11 @@ private
   end
 
   def help(args)
-    if args.empty? || args.length > 1
+    if args.length > 1
+      raise CommandError, "Invalid arguments.\n\n#{$usage}"
+    end
+
+    if args.empty?
       $stdout.puts $usage
       return
     end
@@ -93,7 +97,7 @@ private
 
   def set(args)
     if args.length < 1 || args.length > 2
-      raise CommandError, $set_usage
+      raise CommandError, "Invalid arguments.\n\n#{$set_usage}"
     end
     
     ward = ward_create_connect()
@@ -126,7 +130,7 @@ private
 
   def get(args)
     if args.length != 1
-      raise CommandError, $get_usage
+      raise CommandError, "Invalid arguments.\n\n#{$get_usage}"
     end
     
     # ward get bar.com
@@ -149,7 +153,7 @@ private
 
   def delete(args)
     if args.length != 1
-      raise CommandError, $delete_usage
+      raise CommandError, "Invalid arguments.\n\n#{$delete_usage}"
     end
 
     # ward del bar.com
@@ -168,7 +172,7 @@ private
 
   def generate(args)
     if args.length != 1
-      raise CommandError, $generate_usage
+      raise CommandError, "Invalid arguments.\n\n#{$generate_usage}"
     end
     
     ward = ward_create_connect()
@@ -181,17 +185,15 @@ private
     created = ward.set(id, password)
 
     if created
-      $stdout.puts "Generated password for #{id}:"
-      $stdout.puts password
+      $stdout.puts "Generated password for #{id}."
     else
-      $stdout.puts "Updated password for #{id}:"
-      $stdout.puts password
+      $stdout.puts "Updated #{id} with the generated password."
     end
   end
 
   def copy(args)
     if args.length != 1
-      raise CommandError, $copy_usage
+      raise CommandError, "Invalid arguments.\n\n#{$copy_usage}"
     end
 
     # ward cp bar.com
@@ -216,16 +218,16 @@ private
 
       Clipboard.copy password
       if Clipboard.paste == password
-        $stdout.puts "Password for #{pattern} copied to clipboard."
+        $stdout.puts "Password for #{match.first} copied to clipboard."
       else
-        $stderr.puts "Failed to copy password for #{pattern} to clipboard."
+        $stderr.puts "Failed to copy password for #{match.first} to clipboard."
       end
     end
   end
 
   def list(args)
     if !args.empty?
-      raise CommandError, $list_usage
+      raise CommandError, "Invalid arguments.\n\n#{$list_usage}"
     end
 
     ward = ward_connect()
@@ -241,13 +243,9 @@ private
     end
   end
 
-  def generate_password
-    Passgen.generate(:length => 20, :symbols => true)
-  end
-
   def rename(args)
     if args.count < 2
-      raise CommandError, $rename_usage
+      raise CommandError, "Invalid arguments.\n\n#{$rename_usage}"
     end
 
     ward = ward_connect()
@@ -262,6 +260,10 @@ private
     else
       $stdout.puts "#{old_id} renamed to #{new_id}."
     end
+  end
+
+  def generate_password
+    Passgen.generate(:length => 30, :symbols => true)
   end
 
   def prompt_password(prompt = 'Password')
@@ -329,124 +331,188 @@ end
 $usage = <<END
 Usage:
 
-  ward set
-  ward generate
+    ward set [user@]<domain> [password]
 
-  ward get
-  ward copy
-  ward list
+        Create or update the password for an account.
+        Example: ward set foo@gmail.com
 
-  ward delete
-  ward rename
+    ward generate [user@]<domain>
 
-  ward help
+        Generate a random password for an account.
+        Example: ward generate reddit.com
+
+    ward get <pattern>
+
+        Show the passwords for all accounts matching the pattern.
+        Example: ward get youtube
+
+    ward copy <pattern>
+
+        Copy the password for the account matching the pattern.
+        Example: ward copy news.ycombinator.com
+
+    ward list
+
+        Show all stored accounts and passwords.
+        Example: ward list
+
+    ward delete [user@]<domain>
+
+        Delete the password for an account.
+        Example: ward delete foo@slashdot.org
+
+    ward rename <old> <new>
+
+        Rename the account information stored.
+        Example: ward rename twitter.com foo@twitter.com
+
+    ward help
+
+        Shows help for a specific command.
+        Example: ward help set
 END
 
 $help_usage = <<END
-So meta.
+ward help
+
+    Shows help for a specific command.
 
 Usage:
 
-  ward help
-  ward help <command>
+    ward help
+    ward help <command>
 
 Examples:
 
-  ward help
-  ward help set
-  ward help help
+    ward help
+    ward help set
+    ward help help (so meta)
 
 Alias: help, --help, -h
 END
 
 $set_usage = <<END
+ward set
+
+    Create or update the password for an account. The user is optional.
+    If you do not specify a password, you will be prompted for one.
+
 Usage:
 
-  ward set [user@]<domain> [password]
+    ward set [user@]<domain> [password]
 
 Examples:
 
-  ward set gmail.com
-  ward set gmail.com p4ssw0rd
-  ward set foo@gmail.com
-  ward set foo@gmail.com p4ssw0rd
+    ward set gmail.com
+    ward set gmail.com p4ssw0rd
+    ward set foo@gmail.com
+    ward set foo@gmail.com p4ssw0rd
 
 Alias: set, s
 END
 
 $get_usage = <<END
+ward get
+
+    Show the passwords for all accounts matching the pattern.
+    Matching is done with substring search. Wildcards are not supported.
+
 Usage:
 
-  ward get [user@]<domain>
+    ward get <pattern>
 
 Examples:
 
-  ward get gmail.com
-  ward get foo@gmail.com
+    ward get gmail
+    ward get foo@
+    ward get foo@gmail.com
 
 Alias: get, g, show
 END
 
 $delete_usage = <<END
+ward delete
+
+    Delete the password for an account.
+
 Usage:
 
-  ward delete [user@]<domain>
+    ward delete [user@]<domain>
 
 Examples:
 
-  ward delete gmail.com
-  ward delete foo@gmail.com
+    ward delete gmail.com
+    ward delete foo@gmail.com
 
 Alias: delete, del, d, remove, rm
 END
 
 $generate_usage = <<END
+ward generate
+
+    Generate a random password for an account. The user is optional.
+
 Usage:
 
-  ward generate [user@]<domain>
+    ward generate [user@]<domain>
 
 Examples:
 
-  ward generate gmail.com
-  ward generate foo@gmail.com
+    ward generate gmail.com
+    ward generate foo@gmail.com
 
 Alias: generate, gen
 END
 
 $copy_usage = <<END
+ward copy
+
+    Copy the password for the account matching the pattern.
+    If more than one account matches the pattern, nothing happens.
+    Matching is done with substring search. Wildcards are not supported.
+
 Usage:
 
-  ward copy [user@]<domain>
+    ward copy <pattern>
 
 Examples:
 
-  ward copy gmail.com
-  ward copy foo@gmail.com
+    ward copy gmail
+    ward copy foo@
+    ward copy foo@gmail.com
 
 Alias: copy, cp
 END
 
 $list_usage = <<END
+ward list
+
+    Show all stored accounts and passwords.
+
 Usage:
 
-  ward list
+    ward list
 
 Examples:
 
-  ward list
+    ward list
 
 Alias: list, ls
 END
 
 $rename_usage = <<END
+ward rename
+
+    Rename the account information stored.
+
 Usage:
 
-  ward rename <old> <new>
+    ward rename <old> <new>
 
 Examples:
 
-  ward rename gmail.com foo@gmail.com
-  ward rename foo@gmail.com bar@gmail.com
+    ward rename gmail.com foo@gmail.com
+    ward rename foo@gmail.com bar@gmail.com
 
 Alias: rename, ren, rn
 END
