@@ -9,25 +9,28 @@ end
 class WardCommand
   private_class_method :new 
 
-  def self.run(ward_filename, args)
+  def self.run(ward_filename, args, stdout = $stdout, stderr = $stderr, stdin = $stdin)
     command = new()
-    return command.send(:run, ward_filename, args)
+    return command.send(:run, ward_filename, args, stdout, stderr, stdin)
   end
 
 private
-  def run(ward_filename, args)
+  def run(ward_filename, args, stdout, stderr, stdin)
+    @out = stdout
+    @err = stderr
+    @in = stdin
     @ward_filename = ward_filename
     
     if args.length < 1
-      $stderr.puts $usage
+      @err.puts $usage
       return 1
     end
 
     begin
       handle_command(args)
     rescue CommandError => error
-      $stderr.puts error.message
-      return 2
+      @err.puts error.message
+      return 1
     end
 
     return 0
@@ -71,7 +74,7 @@ private
     end
 
     if args.empty?
-      $stdout.puts $usage
+      @out.puts $usage
       return
     end
 
@@ -92,7 +95,7 @@ private
       :list => $list_usage
     }
 
-    $stdout.puts help[command]
+    @out.puts help[command]
   end
 
   def set(args)
@@ -122,19 +125,19 @@ private
     if exists
       confirm = prompt_confirm("A password already exists for #{id}. Overwrite (y/n)? ")
       if !confirm
-        $stdout.puts 'Aborted.'
+        @out.puts 'Aborted.'
         return
       end
     end
 
     created = ward.set(id, password)
     if created
-      $stdout.print 'Created '
+      @out.print 'Created '
     else
-      $stdout.print 'Updated '
+      @out.print 'Updated '
     end
 
-    $stdout.puts "password for #{id}."
+    @out.puts "password for #{id}."
   end
 
   def get(args)
@@ -152,10 +155,10 @@ private
     if matches.empty?
       raise CommandError, "No password found for #{pattern}."
     elsif matches.count == 1
-      $stdout.puts matches.first.last
+      @out.puts matches.first.last
     else
       matches.each { |key, password|
-        $stdout.puts "#{key}: #{password}"
+        @out.puts "#{key}: #{password}"
       }
     end
   end
@@ -175,7 +178,7 @@ private
     if exists
       confirmed = prompt_confirm("Are you sure you want to delete the password for #{id} (y/n)? ")
       if !confirmed
-        $stdout.puts 'Aborted.'
+        @out.puts 'Aborted.'
         return
       end
     end
@@ -183,9 +186,9 @@ private
     deleted = ward.delete(id)
 
     if deleted
-      $stdout.puts "Deleted password for #{id}."
+      @out.puts "Deleted password for #{id}."
     else
-      $stdout.puts "No password found for #{id}."
+      @out.puts "No password found for #{id}."
     end
   end
 
@@ -205,7 +208,7 @@ private
     if exists
       confirm = prompt_confirm("A password already exists for #{id}. Overwrite (y/n)? ")
       if !confirm
-        $stdout.puts 'Aborted.'
+        @out.puts 'Aborted.'
         return
       end
     end
@@ -213,9 +216,9 @@ private
     created = ward.set(id, password)
 
     if created
-      $stdout.puts "Generated password for #{id}."
+      @out.puts "Generated password for #{id}."
     else
-      $stdout.puts "Updated #{id} with the generated password."
+      @out.puts "Updated #{id} with the generated password."
     end
   end
 
@@ -246,9 +249,9 @@ private
 
       Clipboard.copy password
       if Clipboard.paste == password
-        $stdout.puts "Password for #{match.first} copied to clipboard."
+        @out.puts "Password for #{match.first} copied to clipboard."
       else
-        $stderr.puts "Failed to copy password for #{match.first} to clipboard."
+        @err.puts "Failed to copy password for #{match.first} to clipboard."
       end
     end
   end
@@ -262,12 +265,12 @@ private
 
     count = 0
     ward.each_password { |id, password|
-      $stdout.puts "#{id}: #{password}"
+      @out.puts "#{id}: #{password}"
       count += 1
     }
 
     if count == 0
-      $stdout.puts 'No passwords stored.'
+      @out.puts 'No passwords stored.'
     end
   end
 
@@ -284,9 +287,9 @@ private
     renamed = ward.rename(old_id, new_id)
     
     if !renamed
-      $stderr.puts "#{old_id} does not exist."
+      @err.puts "#{old_id} does not exist."
     else
-      $stdout.puts "#{old_id} renamed to #{new_id}."
+      @out.puts "#{old_id} renamed to #{new_id}."
     end
   end
 
@@ -296,19 +299,19 @@ private
 
   def prompt_password(prompt = 'Password')
     begin
-      $stderr.print "#{prompt}: "
+      @err.print "#{prompt}: "
       password = input_password()
 
       if password.empty?
-        $stderr.puts 'Password cannot be blank.'
+        @err.puts 'Password cannot be blank.'
         raise
       end
 
-      $stderr.print "#{prompt} (verify): "
+      @err.print "#{prompt} (verify): "
       verify = input_password()
 
       if verify != password
-        $stderr.puts 'Passwords do not match.'
+        @err.puts 'Passwords do not match.'
         raise
       end
     rescue
@@ -319,9 +322,9 @@ private
   end
 
   def input_password
-    $stdin.noecho { |stdin|
+    @in.noecho { |stdin|
       password = stdin.gets.sub(/[\r\n]+\z/, '')
-      $stderr.puts
+      @err.puts
 
       return password
     }
@@ -329,9 +332,9 @@ private
 
   def prompt_confirm(prompt)
     begin
-      $stdout.print prompt
+      @out.print prompt
 
-      confirm = $stdin.gets.strip
+      confirm = @in.gets.strip
 
       if confirm =~ /\Ay/i
         return true
@@ -349,11 +352,11 @@ private
     end
 
     begin
-      $stderr.print 'Master password: '
+      @err.print 'Master password: '
       master_password = input_password()
       ward = Ward.new(@ward_filename, master_password)
     rescue MasterPasswordError
-      $stderr.puts 'Incorrect master password.'
+      @err.puts 'Incorrect master password.'
       retry
     end
 
@@ -362,7 +365,7 @@ private
 
   def ward_create_connect
     if !Ward.exists?(@ward_filename)
-      $stdout.puts 'Creating ward database.'
+      @out.puts 'Creating ward database.'
       master_password = prompt_password('Master password')
       ward = Ward.create!(@ward_filename, master_password)
     else
