@@ -380,3 +380,15 @@ Examples:
 
 Alias: copy, cp
 USAGE
+
+$list_usage = <<USAGE
+Usage:
+
+  ward list
+
+Examples:
+
+  ward list
+
+Alias: list, ls
+USAGE
