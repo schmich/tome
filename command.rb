@@ -74,18 +74,13 @@ private
   end
 
   def set(args)
-    if args.length > 2
+    if args.length < 1 || args.length > 2
       raise CommandError, $set_usage
     end
     
     ward = ward_create_connect()
 
     case args.length
-      # ward set
-      when 0
-        id = prompt_id()
-        password = prompt_password()
-
       # TODO: Validate that first argument is in [username@]domain form.
 
       # ward set bar.com
@@ -156,24 +151,17 @@ private
   end
 
   def generate(args)
-    if args.length > 1
+    if args.length != 1
       raise CommandError, $generate_usage
     end
     
     ward = ward_create_connect()
 
-    case args.length
-      # ward gen
-      when 0
-        id = prompt_id()
-
-      # ward gen bar.com
-      # ward gen foo@bar.com
-      when 1
-        id = args[0]
-    end
-
+    # ward gen bar.com
+    # ward gen foo@bar.com
+    id = args[0]
     password = generate_password()
+
     created = ward.set(id, password)
 
     if created
@@ -241,12 +229,6 @@ private
 
   def rename(args)
     $stderr.puts 'TODO'
-  end
-
-  def prompt_id
-    # TODO: Validate input.
-    $stderr.print 'Domain: '
-    $stdin.gets.strip
   end
 
   def prompt_password(prompt = 'Password')
@@ -330,12 +312,10 @@ END
 $set_usage = <<END
 Usage:
 
-  ward set
   ward set [user@]<domain> [password]
 
 Examples:
 
-  ward set
   ward set gmail.com
   ward set gmail.com p4ssw0rd
   ward set foo@gmail.com
@@ -375,12 +355,10 @@ END
 $generate_usage = <<END
 Usage:
 
-  ward generate
   ward generate [user@]<domain>
 
 Examples:
 
-  ward generate
   ward generate gmail.com
   ward generate foo@gmail.com
 
