@@ -33,16 +33,6 @@ class Ward
     end
   end
 
-  def get(id)
-    if id.nil? || id.empty?
-      raise ArgumentError
-    end
-
-    return readable_store do |store|
-      get_by_id(store, id)
-    end
-  end
-
   def delete(id)
     if id.nil? || id.empty?
       raise ArgumentError
@@ -63,14 +53,6 @@ private
     return created
   end
 
-  def get_by_id(store, opts)
-    entry = find_by_id(store, opts[:id])
-
-    return nil if entry.nil? || entry.last.nil?
-
-    return [entry]
-  end
-
   def get_by_pattern(store, pattern)
     find_by_pattern(store, pattern).map { |key, value|
       { key => value[:password] }
@@ -85,16 +67,6 @@ private
     }.nil?
 
     return !same
-  end
-
-  def find_by_id(store, id)
-    return nil if id.nil?
-
-    # TODO: Throw IdNotFoundError?
-
-    return store.find { |key, info|
-      !key.nil? && key.casecmp(id) == 0
-    }
   end
 
   def find_by_pattern(store, pattern)
