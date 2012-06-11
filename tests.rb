@@ -6,9 +6,8 @@ require 'yaml'
 
 class TestWard < Test::Unit::TestCase
   def setup
-    @ward_file = Tempfile.new('ward')
-    @master_password = 'test'
-    @ward = Ward.create!(@ward_file.path, @master_password, 10)
+    @ward_file = Tempfile.new('test')
+    @ward = Ward.create!(@ward_file.path, 'test', 10)
   end
 
   def teardown
@@ -126,14 +125,14 @@ class TestWard < Test::Unit::TestCase
   end
 
   def test_ward_exist_fail
-    ward_file = Tempfile.new('ward')
+    ward_file = Tempfile.new('test')
     exists = Ward.exists?(ward_file.path)
     assert(!exists)
     ward_file.delete rescue nil
   end
 
   def test_ward_create
-    ward_file = Tempfile.new('ward')
+    ward_file = Tempfile.new('test')
     ward = Ward.create!(ward_file.path, 'foo', 10)
     exists = Ward.exists?(ward_file.path)
     assert(exists)
@@ -143,7 +142,7 @@ class TestWard < Test::Unit::TestCase
   end
 
   def test_ward_authenticate_fail
-    ward_file = Tempfile.new('ward')
+    ward_file = Tempfile.new('test')
     Ward.create!(ward_file.path, 'foo', 10)
     assert_raise(MasterPasswordError) {
       Ward.new(ward_file.path, 'bar')
@@ -172,8 +171,8 @@ end
 
 class TestCommand < Test::Unit::TestCase
   def setup
-    @ward_file = Tempfile.new('command')
-    @master_password = 'test'
+    @ward_file = Tempfile.new('test')
+    @ward = Ward.create!(@ward_file.path, 'test', 10)
   end
 
   def teardown
