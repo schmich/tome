@@ -193,6 +193,9 @@ private
 
       raise CommandError, message
     else
+      match = matches.first
+      password = match.last
+
       Clipboard.copy password
       if Clipboard.paste == password
         $stdout.puts "Password for #{pattern} copied to clipboard."
