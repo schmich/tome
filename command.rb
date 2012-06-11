@@ -9,14 +9,14 @@ end
 class WardCommand
   private_class_method :new 
 
-  def self.run(store_filename, args)
+  def self.run(ward_filename, args)
     command = new()
-    return command.send(:run, store_filename, args)
+    return command.send(:run, ward_filename, args)
   end
 
 private
-  def run(store_filename, args)
-    @store_filename = store_filename
+  def run(ward_filename, args)
+    @ward_filename = ward_filename
     
     if args.length < 1
       $stderr.puts $usage
@@ -78,7 +78,13 @@ private
       raise CommandError, $set_usage
     end
     
-    ward = ward_connect()
+    if !Ward.exists?(@ward_filename)
+      $stdout.puts 'Creating ward database.'
+      master_password = prompt_password('Master password')
+      ward = Ward.create(@ward_filename, master_password)
+    else
+      ward = ward_connect()
+    end
 
     case args.length
       # ward set
@@ -115,7 +121,7 @@ private
     if args.length != 1
       raise CommandError, $get_usage
     end
-
+    
     # ward get fb
     # ward get bar.com
     # ward get foo@bar.com
@@ -245,17 +251,17 @@ private
     $stdin.gets.strip
   end
 
-  def prompt_password
+  def prompt_password(prompt = 'Password')
     begin
-      $stderr.print 'Password: '
+      $stderr.print "#{prompt}: "
       password = input_password()
 
       if password.empty?
-        $stderr.puts "Password cannot be blank. Use 'ward delete' to delete a password."
+        $stderr.puts 'Password cannot be blank.'
         raise
       end
 
-      $stderr.print 'Password (verify): '
+      $stderr.print "#{prompt} (verify): "
       verify = input_password()
 
       if verify != password
@@ -279,10 +285,14 @@ private
   end
 
   def ward_connect
+    if !Ward.exists?(@ward_filename)
+      raise CommandError, "Ward database does not exist. Use 'ward set' to save a password first."
+    end
+
     begin
       $stderr.print 'Master password: '
       master_password = input_password()
-      ward = Ward.new(@store_filename, master_password)
+      ward = Ward.new(@ward_filename, master_password)
     rescue MasterPasswordError
       $stderr.puts 'Incorrect master password.'
       retry

@@ -5,11 +5,22 @@ require 'crypt'
 class MasterPasswordError < RuntimeError
 end
 
+class FormatError < RuntimeError
+end
+
 class Ward
-  def initialize(store_filename, master_password, default_stretch = 100_000)
-    @store_filename = store_filename
+  def self.exists?(ward_filename)
+    return !load_ward(ward_filename).nil?
+  end
+
+  def self.create(ward_filename, master_password)
+    save_ward(ward_filename, new_ward(), {}, master_password)
+    return Ward.new(ward_filename, master_password)
+  end
+
+  def initialize(ward_filename, master_password)
+    @ward_filename = ward_filename
     @master_password = master_password
-    @default_stretch = default_stretch
     authenticate()
   end
 
@@ -98,75 +109,77 @@ private
     }
   end
   
-  def load_store()
-    if !File.exist?(@store_filename)
-      return nil
-    end
+  def self.load_ward(ward_filename)
+    return nil if !File.exist?(ward_filename)
 
-    contents = File.open(@store_filename, 'rb') { |file| file.read }
-    if contents.length == 0
-      return nil
-    end
+    contents = File.open(ward_filename, 'rb') { |file| file.read }
+    return nil if contents.length == 0
 
-    config = YAML.load(contents)
+    values = YAML.load(contents)
+    return nil if !values
 
     # TODO: Throw if these values are nil.
     # TODO: Verify version number, raise if incompatible.
-    values = {
-      :version => FILE_VERSION,
-      :salt => config[:salt],
-      :iv => config[:iv],
-      :stretch => config[:stretch]
+    return {
+      :version => values[:version],
+      :salt => values[:salt],
+      :iv => values[:iv],
+      :stretch => values[:stretch],
+      :store => values[:store] 
     }
+  end
 
-    encrypted_store = config[:store]
-    return values if encrypted_store.nil? || encrypted_store.empty?
-
+  def load_store(ward)
+    if ward.nil?
+      raise ArgumentError
+    end
+    
     begin
       store_yaml = Crypt.decrypt(
-        :value => encrypted_store,
+        :value => ward[:store],
         :password => @master_password,
-        :stretch => values[:stretch],
-        :salt => values[:salt],
-        :iv => values[:iv]
+        :stretch => ward[:stretch],
+        :salt => ward[:salt],
+        :iv => ward[:iv]
       )
     rescue ArgumentError
-      return values.merge(:store => {})
+      return {}
     rescue OpenSSL::Cipher::CipherError
       raise MasterPasswordError
     end
 
     store = YAML.load(store_yaml)
-    return values.merge(:store => (store || {}))
+    return store || {}
   end
 
-  def save_store(store, salt, iv, stretch)
-    yaml = YAML.dump(store)
+  def self.save_ward(ward_filename, ward, store, master_password)
+    if ward.nil? || store.nil? || master_password.nil? || master_password.empty?
+      raise ArgumentError
+    end
+
+    store_yaml = YAML.dump(store)
 
     encrypted_store = Crypt.encrypt(
-      :value => yaml, 
-      :password => @master_password,
-      :salt => salt,
-      :iv => iv,
-      :stretch => stretch
+      :value => store_yaml, 
+      :password => master_password,
+      :salt => ward[:salt],
+      :iv => ward[:iv],
+      :stretch => ward[:stretch]
     )
 
-    contents = {
+    contents = ward.merge({
       :version => FILE_VERSION,
-      :salt => salt,
-      :iv => iv, 
-      :stretch => stretch,
       :store => encrypted_store
-    }
+    })
 
-    File.open(@store_filename, 'wb') do |file|
+    File.open(ward_filename, 'wb') do |file|
       YAML.dump(contents, file)
     end
   end
 
   def readable_store()
-    values = load_store() || new_store
-    store = values[:store]
+    ward = Ward.load_ward(@ward_filename)
+    store = load_store(ward)
 
     result = yield store
 
@@ -177,16 +190,12 @@ private
   end
 
   def writable_store()
-    values = load_store() || new_store
-
-    store = values[:store]
-    salt = values[:salt]
-    iv = values[:iv]
-    stretch = values[:stretch]
+    ward = Ward.load_ward(@ward_filename)
+    store = load_store(ward)
 
     result = yield store
 
-    save_store(store, salt, iv, stretch)
+    Ward.save_ward(@ward_filename, ward, store, @master_password)
     store = nil
 
     GC.start
@@ -194,12 +203,12 @@ private
     return result
   end
 
-  def new_store
+  def self.new_ward
     {
       :store => {},
       :salt => Crypt.new_salt,
       :iv => Crypt.new_iv,
-      :stretch => @default_stretch
+      :stretch => 100_000
     }
   end
 
