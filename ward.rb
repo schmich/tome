@@ -34,6 +34,16 @@ class Ward
     end
   end
 
+  def get(id)
+    if id.nil? || id.empty?
+      raise ArgumentError
+    end
+
+    return readable_store do |store|
+      get_by_id(store, id)
+    end
+  end
+
   def find(pattern)
     if pattern.nil? || pattern.empty?
       raise ArgumentError
@@ -92,6 +102,10 @@ private
     }.inject { |hash, item|
       hash.merge!(item)
     } || {}
+  end
+
+  def get_by_id(store, id)
+    store[id]
   end
 
   def delete_by_id(store, id)

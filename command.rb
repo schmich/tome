@@ -118,6 +118,15 @@ private
         password = args[1]
     end
 
+    exists = !ward.get(id).nil?
+    if exists
+      confirm = prompt_confirm("A password already exists for #{id}. Overwrite (y/n)? ")
+      if !confirm
+        $stdout.puts 'Aborted.'
+        return
+      end
+    end
+
     created = ward.set(id, password)
     if created
       $stdout.print 'Created '
@@ -156,11 +165,21 @@ private
       raise CommandError, "Invalid arguments.\n\n#{$delete_usage}"
     end
 
+    ward = ward_connect()
+
     # ward del bar.com
     # ward del foo@bar.com
     id = args[0]
 
-    ward = ward_connect()
+    exists = !ward.get(id).nil?
+    if exists
+      confirmed = prompt_confirm("Are you sure you want to delete the password for #{id} (y/n)? ")
+      if !confirmed
+        $stdout.puts 'Aborted.'
+        return
+      end
+    end
+
     deleted = ward.delete(id)
 
     if deleted
@@ -181,6 +200,15 @@ private
     # ward gen foo@bar.com
     id = args[0]
     password = generate_password()
+
+    exists = !ward.get(id).nil?
+    if exists
+      confirm = prompt_confirm("A password already exists for #{id}. Overwrite (y/n)? ")
+      if !confirm
+        $stdout.puts 'Aborted.'
+        return
+      end
+    end
 
     created = ward.set(id, password)
 
@@ -297,6 +325,22 @@ private
 
       return password
     }
+  end
+
+  def prompt_confirm(prompt)
+    begin
+      $stdout.print prompt
+
+      confirm = $stdin.gets.strip
+
+      if confirm =~ /\Ay/i
+        return true
+      elsif confirm =~ /\An/i
+        return false
+      end
+    rescue
+      retry
+    end
   end
 
   def ward_connect
