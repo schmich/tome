@@ -111,7 +111,6 @@ private
       raise CommandError, $get_usage
     end
     
-    # ward get fb
     # ward get bar.com
     # ward get foo@bar.com
     pattern = args[0]
@@ -135,7 +134,6 @@ private
       raise CommandError, $delete_usage
     end
 
-    # ward del fb
     # ward del bar.com
     # ward del foo@bar.com
     id = args[0]
@@ -178,7 +176,6 @@ private
       raise CommandError, $copy_usage
     end
 
-    # ward cp fb
     # ward cp bar.com
     # ward cp foo@bar.com
     pattern = args[0]
