@@ -4,7 +4,7 @@ Ward is a lightweight password manager with a humane command-line interface. It 
 
 *Disclaimer* I am not a security expert. I've only had limited formal training in security and cryptography.
 Now that I've scared off all but the bravest, feel free to look [under the hood](#under-the-hood) or
-at the security bits in [crypt.rb](crypt.rb).
+at the security bits in [crypt.rb](https://github.com/schmich/ward/blob/master/crypt.rb).
 
 ## Installation
 
