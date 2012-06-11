@@ -125,8 +125,7 @@ private
     if exists
       confirm = prompt_confirm("A password already exists for #{id}. Overwrite (y/n)? ")
       if !confirm
-        @out.puts 'Aborted.'
-        return
+        raise CommandError, 'Aborted.'
       end
     end
 
@@ -178,8 +177,7 @@ private
     if exists
       confirmed = prompt_confirm("Are you sure you want to delete the password for #{id} (y/n)? ")
       if !confirmed
-        @out.puts 'Aborted.'
-        return
+        raise CommandError, 'Aborted.'
       end
     end
 
@@ -208,8 +206,7 @@ private
     if exists
       confirm = prompt_confirm("A password already exists for #{id}. Overwrite (y/n)? ")
       if !confirm
-        @out.puts 'Aborted.'
-        return
+        raise CommandError, 'Aborted.'
       end
     end
 
@@ -275,7 +272,7 @@ private
   end
 
   def rename(args)
-    if args.count < 2
+    if args.count != 2
       raise CommandError, "Invalid arguments.\n\n#{$rename_usage}"
     end
 
@@ -288,8 +285,7 @@ private
     if overwriting
       confirm = prompt_confirm("A password already exists for #{new_id}. Overwrite (y/n)? ")
       if !confirm
-        @out.puts 'Aborted.'
-        return
+        raise CommandError, 'Aborted.'
       end
     end
 
