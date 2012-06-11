@@ -34,43 +34,61 @@ private
   end
 
   def handle_command(args)
-    command = args[0]
-    if command =~ /\A(help|-h|--h)\z/i
-      # TODO: Implement.
+    # TODO: Handle 'command --help', e.g. 'ward set --help'.
+
+    command = command_from_arg(args[0])
+
+    if command.nil?
+      raise CommandError, "Unrecognized command: #{args[0]}.\n\n#{$usage}"
     end
 
-    case command
-      when /\A(set|s)\z/i
-        args.shift
-        set(args)
+    args.shift
+    send(command, args) 
+  end
 
-      when /\A(get|g|show)\z/i
-        args.shift
-        get(args)
+  def command_from_arg(arg)
+    commands = {
+      /\A(help|(-h)|(--help))\z/i => :help,
+      /\A(set|s)\z/i => :set,
+      /\A(get|g|show)\z/i => :get,
+      /\A(delete|del|d|rm|remove)\z/i => :delete,
+      /\A(generate|gen)\z/i => :generate,
+      /\A(copy|cp)\z/i => :copy,
+      /\A(rename|ren|rn)\z/i => :rename,
+      /\A(list|ls)\z/i => :list
+    }
 
-      when /\A(delete|del|d|rm|remove)\z/i
-        args.shift
-        delete(args)
+    commands.each { |pattern, command|
+      return command if arg =~ pattern
+    }
 
-      when /\A(generate|gen)\z/i
-        args.shift
-        generate(args)
+    return nil
+  end
 
-      when /\A(copy|cp)\z/i
-        args.shift
-        copy(args)
-
-      when /\A(rename|ren|rn)\z/i
-        args.shift
-        rename(args)
-
-      when /\A(list|ls)\z/i
-        args.shift
-        list(args)
-
-      else
-        raise CommandError, "Unrecognized command: #{command}.\n\n#{$usage}"
+  def help(args)
+    if args.empty? || args.length > 1
+      $stdout.puts $usage
+      return
     end
+
+    command = command_from_arg(args[0])
+
+    if command.nil?
+      raise CommandError, "No help for unrecognized command: #{args[0]}.\n\n#{$usage}"
+    end
+
+    help = {
+      :help => $help_usage,
+      :set => $set_usage,
+      :get => $get_usage,
+      :delete => $delete_usage,
+      :generate => $generate_usage,
+      :copy => $copy_usage,
+      :rename => $rename_usage,
+      :list => $list_usage
+    }
+
+    $stdout.puts help[command]
   end
 
   def set(args)
@@ -322,6 +340,23 @@ Usage:
   ward rename
 
   ward help
+END
+
+$help_usage = <<END
+So meta.
+
+Usage:
+
+  ward help
+  ward help <command>
+
+Examples:
+
+  ward help
+  ward help set
+  ward help help
+
+Alias: help, --help, -h
 END
 
 $set_usage = <<END
