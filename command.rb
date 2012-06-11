@@ -154,8 +154,11 @@ private
     if matches.empty?
       raise CommandError, "No password found for #{pattern}."
     elsif matches.count == 1
-      @out.puts matches.first.last
+      match = matches.first
+      @out.puts "Password for #{match.first}:"
+      @out.puts match.last
     else
+      @out.puts "Multiple matches for #{pattern}:"
       matches.each { |key, password|
         @out.puts "#{key}: #{password}"
       }
