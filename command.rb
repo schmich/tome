@@ -78,13 +78,7 @@ private
       raise CommandError, $set_usage
     end
     
-    if !Ward.exists?(@ward_filename)
-      $stdout.puts 'Creating ward database.'
-      master_password = prompt_password('Master password')
-      ward = Ward.create!(@ward_filename, master_password)
-    else
-      ward = ward_connect()
-    end
+    ward = ward_create_connect()
 
     case args.length
       # ward set
@@ -166,7 +160,7 @@ private
       raise CommandError, $generate_usage
     end
     
-    ward = ward_connect()
+    ward = ward_create_connect()
 
     case args.length
       # ward gen
@@ -286,7 +280,7 @@ private
 
   def ward_connect
     if !Ward.exists?(@ward_filename)
-      raise CommandError, "Ward database does not exist. Use 'ward set' to save a password first."
+      raise CommandError, "Ward database does not exist. Use 'ward set' or 'ward generate' to create a password first."
     end
 
     begin
@@ -299,6 +293,16 @@ private
     end
 
     return ward
+  end
+
+  def ward_create_connect
+    if !Ward.exists?(@ward_filename)
+      $stdout.puts 'Creating ward database.'
+      master_password = prompt_password('Master password')
+      ward = Ward.create!(@ward_filename, master_password)
+    else
+      ward = ward_connect()
+    end
   end
 end
 

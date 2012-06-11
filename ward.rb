@@ -143,6 +143,7 @@ private
         :iv => ward[:iv]
       )
     rescue ArgumentError
+      # TODO: Should probably be raising an error here.
       return {}
     rescue OpenSSL::Cipher::CipherError
       raise MasterPasswordError
