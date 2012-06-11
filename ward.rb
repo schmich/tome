@@ -21,6 +21,9 @@ class Ward
   def initialize(ward_filename, master_password)
     @ward_filename = ward_filename
     @master_password = master_password
+
+    # TODO: This is suboptimal. We are loading the store
+    # twice for most operations because of this authentication.
     authenticate()
   end
 
