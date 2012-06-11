@@ -101,6 +101,12 @@ class TestWard < Test::Unit::TestCase
     assert_equal('baz', matches['baz@bar.com'])
   end
 
+  def test_list_fail
+    assert_raise(ArgumentError) {
+      @ward.each_password
+    }
+  end
+
   def test_list_empty
     count = 0
     @ward.each_password {
