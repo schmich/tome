@@ -141,6 +141,15 @@ class TestWard < Test::Unit::TestCase
     assert(created)
     ward_file.delete rescue nil
   end
+
+  def test_ward_authenticate_fail
+    ward_file = Tempfile.new('ward')
+    Ward.create!(ward_file.path, 'foo', 10)
+    assert_raise(MasterPasswordError) {
+      Ward.new(ward_file.path, 'bar')
+    }
+    ward_file.delete rescue nil
+  end
 end
 
 class TestCommand < Test::Unit::TestCase
