@@ -100,6 +100,24 @@ class TestWard < Test::Unit::TestCase
     assert_equal('foo', matches['foo@bar.com'])
     assert_equal('baz', matches['baz@bar.com'])
   end
+
+  def test_list_empty
+    count = 0
+    @ward.each_password {
+      count += 1
+    }
+
+    assert_equal(0, count)
+  end
+
+  def test_set_list
+    created = @ward.set('foo@bar.com', 'foo')
+    assert(created)
+    @ward.each_password { |id, password|
+      assert_equal('foo@bar.com', id)
+      assert_equal('foo', password)
+    }
+  end
 end
 
 class TestCommand < Test::Unit::TestCase

@@ -66,7 +66,8 @@ private
 
       when /\A(list|ls)\z/i
         # TODO
-        $stderr.puts 'TODO'
+        args.shift
+        list(args)
 
       else
         raise CommandError, "Unrecognized command: #{command}.\n\n#{$usage}"
@@ -214,6 +215,24 @@ private
       else
         $stderr.puts "Failed to copy password for #{pattern} to clipboard."
       end
+    end
+  end
+
+  def list(args)
+    if !args.empty?
+      raise CommandError, $list_usage
+    end
+
+    ward = ward_connect()
+
+    count = 0
+    ward.each_password { |id, password|
+      $stdout.puts "#{id}: #{password}"
+      count += 1
+    }
+
+    if count == 0
+      $stdout.puts 'No passwords stored.'
     end
   end
 

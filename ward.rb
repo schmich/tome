@@ -43,6 +43,18 @@ class Ward
     end
   end
 
+  def each_password
+    if !block_given?
+      raise ArgumentError
+    end
+
+    readable_store do |store|
+      store.each { |id, info|
+        yield id, info[:password]
+      }
+    end 
+  end
+
 private
   def set_by_id(store, id, password)
     created = !store.include?(id)
@@ -125,7 +137,7 @@ private
     end
 
     store = YAML.load(store_yaml)
-    return values.merge(:store => (store ? store : {}))
+    return values.merge(:store => (store || {}))
   end
 
   def save_store(store, salt, iv, stretch)
@@ -153,7 +165,7 @@ private
   end
 
   def readable_store()
-    values = load_store || new_store
+    values = load_store() || new_store
     store = values[:store]
 
     result = yield store
