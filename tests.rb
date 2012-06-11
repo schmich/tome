@@ -151,7 +151,7 @@ class TestWard < Test::Unit::TestCase
     ward_file.delete rescue nil
   end
 
-  def test_rename
+  def test_rename_find
     created = @ward.set('foo', 'bar')
     assert(created)
     matches = @ward.find('foo')
