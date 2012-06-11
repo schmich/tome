@@ -293,20 +293,23 @@ private
 end
 
 # TODO: Complete these.
-$usage = <<USAGE
+$usage = <<END
 Usage:
 
   ward set
   ward generate
+
   ward get
   ward copy
   ward list
+
   ward delete
   ward rename
-  ward help
-USAGE
 
-$set_usage = <<USAGE
+  ward help
+END
+
+$set_usage = <<END
 Usage:
 
   ward set
@@ -321,9 +324,9 @@ Examples:
   ward set foo@gmail.com p4ssw0rd
 
 Alias: set, s
-USAGE
+END
 
-$get_usage = <<USAGE
+$get_usage = <<END
 Usage:
 
   ward get [user@]<domain>
@@ -335,9 +338,9 @@ Examples:
   ward get foo@gmail.com
 
 Alias: get, g, show
-USAGE
+END
 
-$delete_usage = <<USAGE
+$delete_usage = <<END
 Usage:
 
   ward delete [user@]<domain>
@@ -349,9 +352,9 @@ Examples:
   ward delete foo@gmail.com
 
 Alias: delete, del, d, remove, rm
-USAGE
+END
 
-$generate_usage = <<USAGE
+$generate_usage = <<END
 Usage:
 
   ward generate
@@ -364,9 +367,9 @@ Examples:
   ward generate foo@gmail.com
 
 Alias: generate, gen
-USAGE
+END
 
-$copy_usage = <<USAGE
+$copy_usage = <<END
 Usage:
 
   ward copy [user@]<domain>
@@ -378,9 +381,9 @@ Examples:
   ward copy foo@gmail.com
 
 Alias: copy, cp
-USAGE
+END
 
-$list_usage = <<USAGE
+$list_usage = <<END
 Usage:
 
   ward list
@@ -390,4 +393,4 @@ Examples:
   ward list
 
 Alias: list, ls
-USAGE
+END
