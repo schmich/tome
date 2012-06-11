@@ -50,6 +50,13 @@ class TestWard < Test::Unit::TestCase
     assert_empty(find)
   end
 
+  def test_set_find_fail
+    created = @ward.set('foo.com', 'bar')
+    assert(created)
+    find = @ward.find('bar.com')
+    assert_empty(find)
+  end
+
   def test_set_delete
     created = @ward.set('foo.com', 'bar')
     assert(created)
