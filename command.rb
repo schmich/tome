@@ -225,7 +225,22 @@ private
   end
 
   def rename(args)
-    $stderr.puts 'TODO'
+    if args.count < 2
+      raise CommandError, $rename_usage
+    end
+
+    ward = ward_connect()
+
+    old_id = args[0]
+    new_id = args[1]
+
+    renamed = ward.rename(old_id, new_id)
+    
+    if !renamed
+      $stderr.puts "#{old_id} does not exist."
+    else
+      $stdout.puts "#{old_id} renamed to #{new_id}."
+    end
   end
 
   def prompt_password(prompt = 'Password')
@@ -328,7 +343,6 @@ Usage:
 
 Examples:
 
-  ward get gmail
   ward get gmail.com
   ward get foo@gmail.com
 
@@ -342,7 +356,6 @@ Usage:
 
 Examples:
 
-  ward delete gmail
   ward delete gmail.com
   ward delete foo@gmail.com
 
@@ -369,7 +382,6 @@ Usage:
 
 Examples:
 
-  ward copy gmail
   ward copy gmail.com
   ward copy foo@gmail.com
 
@@ -386,4 +398,17 @@ Examples:
   ward list
 
 Alias: list, ls
+END
+
+$rename_usage = <<END
+Usage:
+
+  ward rename <old> <new>
+
+Examples:
+
+  ward rename gmail.com foo@gmail.com
+  ward rename foo@gmail.com bar@gmail.com
+
+Alias: rename, ren, rn
 END

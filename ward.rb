@@ -5,9 +5,6 @@ require 'crypt'
 class MasterPasswordError < RuntimeError
 end
 
-class FormatError < RuntimeError
-end
-
 class Ward
   def self.exists?(ward_filename)
     return !load_ward(ward_filename).nil?
@@ -54,6 +51,16 @@ class Ward
 
     return writable_store do |store|
       delete_by_id(store, id)
+    end
+  end
+
+  def rename(old_id, new_id)
+    if old_id.nil? || old_id.empty? || new_id.nil? || new_id.empty?
+      raise ArgumentError
+    end
+
+    return writable_store do |store|
+      rename_by_id(store, old_id, new_id)
     end
   end
 
@@ -112,6 +119,17 @@ private
     }
   end
   
+  def rename_by_id(store, old_id, new_id)
+    if store[old_id].nil?
+      return false
+    else
+      values = store[old_id]
+      store.delete(old_id)
+      store[new_id] = values
+      return true
+    end
+  end
+
   def self.load_ward(ward_filename)
     return nil if !File.exist?(ward_filename)
 
