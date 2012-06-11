@@ -6,13 +6,13 @@ require 'yaml'
 
 class TestWard < Test::Unit::TestCase
   def setup
-    @temp_store = Tempfile.new('ward')
+    @ward_file = Tempfile.new('ward')
     @master_password = 'test'
-    @ward = Ward.new(@temp_store.path, @master_password, 10)
+    @ward = Ward.create!(@ward_file.path, @master_password, 10)
   end
 
   def teardown
-    @temp_store.delete rescue nil
+    @ward_file.delete rescue nil
   end
 
   def test_set
@@ -124,20 +124,37 @@ class TestWard < Test::Unit::TestCase
       assert_equal('foo', password)
     }
   end
+
+  def test_ward_exist_fail
+    ward_file = Tempfile.new('ward')
+    exists = Ward.exists?(ward_file.path)
+    assert(!exists)
+    ward_file.delete rescue nil
+  end
+
+  def test_ward_create
+    ward_file = Tempfile.new('ward')
+    ward = Ward.create!(ward_file.path, 'foo', 10)
+    exists = Ward.exists?(ward_file.path)
+    assert(exists)
+    created = ward.set('bar.com', 'foo')
+    assert(created)
+    ward_file.delete rescue nil
+  end
 end
 
 class TestCommand < Test::Unit::TestCase
   def setup
-    @temp_store = Tempfile.new('command')
+    @ward_file = Tempfile.new('command')
     @master_password = 'test'
   end
 
   def teardown
-    @temp_store.delete rescue nil
+    @ward_file.delete rescue nil
   end
 
   def cmd(*args)
-    WardCommand.run(@temp_store.path, args)
+    WardCommand.run(@ward_file.path, args)
   end
 
   def test_set
