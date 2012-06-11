@@ -30,7 +30,8 @@ Recalling a password is easy:
     Master password:
     p4ssw0rd
     
-In fact, it's even simpler than that. `ward get` does substring pattern matching to recall a password, so this works as well:
+In fact, it's even simpler than that. `ward get` does substring pattern matching to recall a password,
+so this works, too:
 
     > ward get linked
     Master password:
@@ -44,11 +45,23 @@ You can also generate and copy complex passwords without having to remember anyt
 
     > ward get last
     Master password:
+    Password for last.fm:
     kizWy76F2@G(21c11(9Tf?f@43B!kq
 
     > ward copy last
     Master password:
     Password for last.fm copied to clipboard.
+    
+If you want, you can specify a username with your domain:
+
+    > ward set foo@bar.com baz
+    Master password:
+    Created password for foo@bar.com.
+    
+    > ward get bar
+    Master password:
+    Password for foo@bar.com:
+    baz
     
 See `ward help` for advanced commands and usage.
 
