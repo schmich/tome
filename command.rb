@@ -65,7 +65,6 @@ private
         $stderr.puts 'TODO'
 
       when /\A(list|ls)\z/i
-        # TODO
         args.shift
         list(args)
 
