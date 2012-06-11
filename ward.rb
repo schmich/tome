@@ -163,17 +163,22 @@ private
 
     store_yaml = YAML.dump(store)
 
+    new_salt = Crypt.new_salt
+    new_iv = Crypt.new_iv
+
     encrypted_store = Crypt.encrypt(
       :value => store_yaml, 
       :password => master_password,
-      :salt => ward[:salt],
-      :iv => ward[:iv],
+      :salt => new_salt,
+      :iv => new_iv,
       :stretch => ward[:stretch]
     )
 
     contents = ward.merge({
       :version => FILE_VERSION,
-      :store => encrypted_store
+      :store => encrypted_store,
+      :salt => new_salt,
+      :iv => new_iv
     })
 
     File.open(ward_filename, 'wb') do |file|
