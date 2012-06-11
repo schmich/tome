@@ -13,8 +13,8 @@ class Ward
     return !load_ward(ward_filename).nil?
   end
 
-  def self.create(ward_filename, master_password)
-    save_ward(ward_filename, new_ward(), {}, master_password)
+  def self.create!(ward_filename, master_password, stretch = 100_000)
+    save_ward(ward_filename, new_ward(stretch), {}, master_password)
     return Ward.new(ward_filename, master_password)
   end
 
@@ -133,7 +133,7 @@ private
     if ward.nil?
       raise ArgumentError
     end
-    
+
     begin
       store_yaml = Crypt.decrypt(
         :value => ward[:store],
@@ -203,12 +203,12 @@ private
     return result
   end
 
-  def self.new_ward
+  def self.new_ward(stretch)
     {
       :store => {},
       :salt => Crypt.new_salt,
       :iv => Crypt.new_iv,
-      :stretch => 100_000
+      :stretch => stretch
     }
   end
 

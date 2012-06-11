@@ -81,7 +81,7 @@ private
     if !Ward.exists?(@ward_filename)
       $stdout.puts 'Creating ward database.'
       master_password = prompt_password('Master password')
-      ward = Ward.create(@ward_filename, master_password)
+      ward = Ward.create!(@ward_filename, master_password)
     else
       ward = ward_connect()
     end
