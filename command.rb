@@ -61,8 +61,8 @@ private
         copy(args)
 
       when /\A(rename|ren|rn)\z/i
-        # TODO
-        $stderr.puts 'TODO'
+        args.shift
+        rename(args)
 
       when /\A(list|ls)\z/i
         args.shift
@@ -237,6 +237,10 @@ private
 
   def generate_password
     Passgen.generate(:length => 20, :symbols => true)
+  end
+
+  def rename(args)
+    $stderr.puts 'TODO'
   end
 
   def prompt_id
