@@ -3,6 +3,7 @@ require 'command'
 require 'test/unit'
 require 'tempfile'
 require 'stringio'
+require 'clipboard'
 require 'yaml'
 
 class StringIO
@@ -200,8 +201,8 @@ class TestCommand < Test::Unit::TestCase
 
     return {
       :exit => exit,
-      :out => stdout,
-      :err => stderr
+      :out => stdout.read,
+      :err => stderr.read
     }
   end
 
@@ -210,17 +211,64 @@ class TestCommand < Test::Unit::TestCase
     assert_equal(0, c[:exit])
   end
 
-  def test_set_fail
+  def test_set_explicit_password
+    c = cmd('set', 'foo.com', 'bar', "test\n")
+    assert_equal(0, c[:exit])
+    c = cmd('get', 'foo.com', "test\n")
+    assert_equal(0, c[:exit])
+    assert(c[:out] =~ /\bbar\b/)
+  end
+
+  def test_set_overwrite_abort
+  end
+
+  def test_set_overwrite_confirm
+  end
+
+  def test_set_too_few_args
     c = cmd('set', '')
     assert_equal(1, c[:exit])
   end
 
-  def test_get
+  def test_set_too_many_args
+    c = cmd('set', 'foo', 'bar', 'baz', '')
+    assert_equal(1, c[:exit])
+  end
+
+  def test_generate
+  end
+
+  def test_generate_too_few_args
+  end
+
+  def test_generate_too_many_args
+  end
+
+  def test_get_exact
     c = cmd('set', 'foo.com', "test\nbar\nbar")
     assert_equal(0, c[:exit])
     c = cmd('get', 'foo.com', "test\n")
     assert_equal(0, c[:exit])
-    assert(c[:out].read =~ /bar/)
+    assert(c[:out] =~ /\bbar\b/)
+  end
+
+  def test_get_pattern
+    c = cmd('set', 'foo.com', "test\nbar\nbar")
+    assert_equal(0, c[:exit])
+    c = cmd('get', 'foo', "test\n")
+    assert_equal(0, c[:exit])
+    assert(c[:out] =~ /\bbar\b/)
+  end
+
+  def test_get_pattern_multi
+    c = cmd('set', 'baz@foo.com', "test\nbar\nbar")
+    assert_equal(0, c[:exit])
+    c = cmd('set', 'quux@foo.com', "test\nwaldo\nwaldo")
+    assert_equal(0, c[:exit])
+    c = cmd('get', 'foo', "test\n")
+    assert_equal(0, c[:exit])
+    assert(c[:out] =~ /\bbar\b/)
+    assert(c[:out] =~ /\bwaldo\b/)
   end
 
   def test_get_fail
@@ -228,12 +276,142 @@ class TestCommand < Test::Unit::TestCase
     assert_equal(1, c[:exit])
   end
 
+  def test_get_too_few_args
+    c = cmd('get', '')
+    assert_equal(1, c[:exit])
+  end
+
+  def test_get_too_many_args
+    c = cmd('get', 'foo', 'bar', '')
+    assert_equal(1, c[:exit])
+  end
+
+  def test_copy
+    c = cmd('set', 'foo.com', "test\nbar\nbar")
+    assert_equal(0, c[:exit])
+    c = cmd('copy', 'foo.com', "test\n")
+    assert_equal('bar', Clipboard.paste)
+  end
+
+  def test_copy_fail
+    c = cmd('copy', 'foo.com', "test\n")
+    assert_equal(1, c[:exit])
+  end
+
+  def test_copy_too_few_args
+    c = cmd('copy', '')
+    assert_equal(1, c[:exit])
+  end
+
+  def test_copy_too_many_args
+    c = cmd('copy', 'foo', 'bar', '')
+    assert_equal(1, c[:exit])
+  end
+
+  def test_list_empty
+    c = cmd('list', "test\n")
+    assert_equal(0, c[:exit])
+  end
+
+  def test_list
+    c = cmd('set', 'foo.com', "test\nbar\nbar")
+    assert_equal(0, c[:exit])
+    c = cmd('list', "test\n")
+    assert_equal(0, c[:exit])
+    assert(c[:out] =~ /\bfoo\.com\b.*\bbar\b/)
+  end
+
+  def test_list_multi
+    c = cmd('set', 'foo.com', "test\nfoo\nfoo")
+    assert_equal(0, c[:exit])
+    c = cmd('set', 'bar.com', "test\nbar\nbar")
+    assert_equal(0, c[:exit])
+    c = cmd('list', "test\n")
+    assert_equal(0, c[:exit])
+    assert(c[:out] =~ /\bfoo\.com\b.*\bfoo\b/)
+    assert(c[:out] =~ /\bbar\.com\b.*\bbar\b/)
+  end
+
+  def test_list_too_many_args
+    c = cmd('list', 'foo', '')
+    assert_equal(1, c[:exit])
+  end
+
+  def test_delete
+    c = cmd('set', 'foo.com', "test\nfoo\nfoo")
+    assert_equal(0, c[:exit])
+    c = cmd('delete', 'foo.com', "test\ny\n")
+    assert_equal(0, c[:exit])
+    c = cmd('get', 'foo.com', "test\n")
+    assert_equal(1, c[:exit])
+  end
+
+  def test_delete_fail
+    c = cmd('delete', 'foo.com' "test\n")
+    assert_equal(1, c[:exit])
+  end
+
+  def test_delete_too_few_args
+    c = cmd('delete', '')
+    assert_equal(1, c[:exit])
+  end
+
+  def test_delete_too_many_args
+    c = cmd('delete', 'foo', 'bar', '')
+    assert_equal(1, c[:exit])
+  end
+
+  def test_rename
+    c = cmd('set', 'foo.com', "test\nfoo\nfoo")
+    assert_equal(0, c[:exit])
+    c = cmd('rename', 'foo.com', 'bar.com', "test\n")
+    assert_equal(0, c[:exit])
+    c = cmd('get', 'bar.com', "test\n")
+    assert_equal(0, c[:exit])
+    assert(c[:out] =~ /\bfoo\b/)
+  end
+
+  def test_rename_fail
+    c = cmd('rename', 'foo.com', 'bar.com', "test\n")
+    assert_equal(1, c[:exit])
+  end
+
+  def test_rename_collide_abort
+  end
+
+  def test_rename_collide_confirm
+  end
+
+  def test_rename_too_few_args
+  end
+
+  def test_rename_too_many_args
+  end
+
+  def test_invalid_command
+  end
+
   def test_set_alias
+  end
+
+  def test_generate_alias
   end
 
   def test_get_alias
   end
 
+  def test_copy_alias
+  end
+
+  def test_list_alias
+  end
+
   def test_delete_alias
+  end
+
+  def test_rename_alias
+  end
+
+  def test_help_alias
   end
 end
