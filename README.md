@@ -81,7 +81,7 @@ of every website you sign up with, you can use ward to help mitigate your risk a
   The encryption on the `.ward` file is meant to mitigate this danger. Brute-force decryption should take significant
   computing power and time. To further reduce risk, don't store usernames (e.g. do `ward set gmail.com` instead of `ward set foo@gmail.com`).
 * Dependence on the `.ward` file: if your `.ward` file is lost or corrupt and you forget your passwords, you'll have to reset them.
-* If you want access to your passwords on multiple machines, you'll have to sync the `.ward` file somehow.
+* If you want access to your passwords on multiple machines, you'll have to sync the `.ward` file between machines.
 * Trust in *my* secure coding practices: I encourage you to look at the source yourself.
 
 ## Under the hood
