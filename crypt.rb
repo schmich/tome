@@ -26,8 +26,10 @@ private
   def self.crypt(method, opts)
     raise ArgumentError if
       opts.nil? || opts.empty? || opts[:value].nil? ||
-      opts[:password].nil? || opts[:salt].nil? ||
-      opts[:iv].nil? || opts[:stretch].nil?
+      opts[:password].nil? || opts[:password].empty? ||
+      opts[:salt].nil? || opts[:salt].empty? ||
+      opts[:iv].nil? || opts[:iv].empty? ||
+      opts[:stretch].nil? || opts[:stretch].nil?
 
     cipher = new_cipher
     cipher.send(method)
