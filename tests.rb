@@ -206,6 +206,16 @@ class TestCommand < Test::Unit::TestCase
     }
   end
 
+  def test_empty
+    c = cmd('', '')
+    assert_equal(1, c[:exit])
+  end
+
+  def test_invalid_command
+    c = cmd('invalid', '')
+    assert_equal(1, c[:exit])
+  end
+
   def test_set
     c = cmd('set', 'foo.com', "test\nbar\nbar")
     assert_equal(0, c[:exit])
@@ -220,28 +230,70 @@ class TestCommand < Test::Unit::TestCase
   end
 
   def test_set_overwrite_abort
+    c = cmd('set', 'foo.com', 'bar', "test\n")
+    assert_equal(0, c[:exit])
+    c = cmd('set', 'foo.com', 'baz', "test\nn\n")
+    assert_equal(1, c[:exit])
+    c = cmd('get', 'foo.com', "test\n")
+    assert_equal(0, c[:exit])
+    assert(c[:out] =~ /\bbar\b/)
   end
 
   def test_set_overwrite_confirm
+    c = cmd('set', 'foo.com', 'bar', "test\n")
+    assert_equal(0, c[:exit])
+    c = cmd('set', 'foo.com', 'baz', "test\ny\n")
+    assert_equal(0, c[:exit])
+    c = cmd('get', 'foo.com', "test\n")
+    assert_equal(0, c[:exit])
+    assert(c[:out] =~ /\bbaz\b/)
   end
 
   def test_set_too_few_args
-    c = cmd('set', '')
+    c = cmd('set', "test\n")
     assert_equal(1, c[:exit])
   end
 
   def test_set_too_many_args
-    c = cmd('set', 'foo', 'bar', 'baz', '')
+    c = cmd('set', 'foo.com', 'bar', 'baz', "test\n")
     assert_equal(1, c[:exit])
   end
 
   def test_generate
+    c = cmd('generate', 'foo.com', "test\n")
+    assert_equal(0, c[:exit])
+    c = cmd('get', 'foo.com', "test\n")
+    assert_equal(0, c[:exit])
+  end
+
+  def test_generate_overwrite_abort
+    c = cmd('set', 'foo.com', 'foo', "test\n")
+    assert_equal(0, c[:exit])
+    c = cmd('generate', 'foo.com', "test\nn\n")
+    assert_equal(1, c[:exit])
+    c = cmd('get', 'foo.com', "test\n")
+    assert_equal(0, c[:exit])
+    assert(c[:out] =~ /\bfoo\b/)
+  end
+
+  def test_generate_overwrite_confirm
+    c = cmd('set', 'foo.com', 'ImprobableString', "test\n")
+    assert_equal(0, c[:exit])
+    c = cmd('generate', 'foo.com', "test\ny\n")
+    assert_equal(0, c[:exit])
+    c = cmd('get', 'foo.com', "test\n")
+    assert_equal(0, c[:exit])
+    assert(c[:out] !=~ /\bImprobableString\b/)
   end
 
   def test_generate_too_few_args
+    c = cmd('generate', "test\n")
+    assert_equal(1, c[:exit])
   end
 
   def test_generate_too_many_args
+    c = cmd('generate', 'foo.com', 'bar', "test\n")
+    assert_equal(1, c[:exit])
   end
 
   def test_get_exact
@@ -277,12 +329,14 @@ class TestCommand < Test::Unit::TestCase
   end
 
   def test_get_too_few_args
-    c = cmd('get', '')
+    c = cmd('get', "test\n")
     assert_equal(1, c[:exit])
   end
 
   def test_get_too_many_args
-    c = cmd('get', 'foo', 'bar', '')
+    c = cmd('set', 'foo.com', "test\nbar\nbar")
+    assert_equal(0, c[:exit])
+    c = cmd('get', 'foo.com', 'bar', "test\n")
     assert_equal(1, c[:exit])
   end
 
@@ -294,8 +348,10 @@ class TestCommand < Test::Unit::TestCase
   end
 
   def test_copy_fail
+    Clipboard.copy 'baz'
     c = cmd('copy', 'foo.com', "test\n")
     assert_equal(1, c[:exit])
+    assert_equal('baz', Clipboard.paste)
   end
 
   def test_copy_too_few_args
@@ -304,8 +360,12 @@ class TestCommand < Test::Unit::TestCase
   end
 
   def test_copy_too_many_args
-    c = cmd('copy', 'foo', 'bar', '')
+    Clipboard.copy 'baz'
+    c = cmd('set', 'foo.com', "test\nbar\nbar")
+    assert_equal(0, c[:exit])
+    c = cmd('copy', 'foo.com', 'bar', "test\n")
     assert_equal(1, c[:exit])
+    assert_equal('baz', Clipboard.paste)
   end
 
   def test_list_empty
@@ -333,11 +393,11 @@ class TestCommand < Test::Unit::TestCase
   end
 
   def test_list_too_many_args
-    c = cmd('list', 'foo', '')
+    c = cmd('list', 'foo', "test\n")
     assert_equal(1, c[:exit])
   end
 
-  def test_delete
+  def test_delete_confirm
     c = cmd('set', 'foo.com', "test\nfoo\nfoo")
     assert_equal(0, c[:exit])
     c = cmd('delete', 'foo.com', "test\ny\n")
@@ -346,18 +406,30 @@ class TestCommand < Test::Unit::TestCase
     assert_equal(1, c[:exit])
   end
 
+  def test_delete_abort
+    c = cmd('set', 'foo.com', "test\nfoo\nfoo")
+    assert_equal(0, c[:exit])
+    c = cmd('delete', 'foo.com', "test\nn\n")
+    assert_equal(1, c[:exit])
+    c = cmd('get', 'foo.com', "test\n")
+    assert_equal(0, c[:exit])
+    assert(c[:out] =~ /\bfoo\b/)
+  end
+
   def test_delete_fail
     c = cmd('delete', 'foo.com' "test\n")
     assert_equal(1, c[:exit])
   end
 
   def test_delete_too_few_args
-    c = cmd('delete', '')
+    c = cmd('delete', "test\n")
     assert_equal(1, c[:exit])
   end
 
   def test_delete_too_many_args
-    c = cmd('delete', 'foo', 'bar', '')
+    c = cmd('set', 'foo.com', "test\nfoo\nfoo")
+    assert_equal(0, c[:exit])
+    c = cmd('delete', 'foo.com', 'bar', "test\n")
     assert_equal(1, c[:exit])
   end
 
@@ -377,18 +449,66 @@ class TestCommand < Test::Unit::TestCase
   end
 
   def test_rename_collide_abort
+    c = cmd('set', 'foo.com', "test\nfoo\nfoo")
+    assert_equal(0, c[:exit])
+    c = cmd('set', 'bar.com', "test\nbar\nbar")
+    assert_equal(0, c[:exit])
+    c = cmd('rename', 'foo.com', 'bar.com', "test\nn\n")
+    assert_equal(1, c[:exit])
+    c = cmd('get', 'foo.com', "test\n")
+    assert_equal(0, c[:exit])
+    assert(c[:out] =~ /\bfoo\b/)
+    c = cmd('get', 'bar.com', "test\n")
+    assert_equal(0, c[:exit])
+    assert(c[:out] =~ /\bbar\b/)
   end
 
   def test_rename_collide_confirm
+    c = cmd('set', 'foo.com', "test\nfoo\nfoo")
+    assert_equal(0, c[:exit])
+    c = cmd('set', 'bar.com', "test\nbar\nbar")
+    assert_equal(0, c[:exit])
+    c = cmd('rename', 'foo.com', 'bar.com', "test\ny\n")
+    assert_equal(0, c[:exit])
+    c = cmd('get', 'foo.com', "test\n")
+    assert_equal(1, c[:exit])
+    c = cmd('get', 'bar.com', "test\n")
+    assert_equal(0, c[:exit])
+    assert(c[:out] =~ /\bfoo\b/)
   end
 
   def test_rename_too_few_args
+    c = cmd('set', 'foo.com', "test\nfoo\nfoo")
+    assert_equal(0, c[:exit])
+    c = cmd('rename', 'foo.com', "test\n")
+    assert_equal(1, c[:exit])
   end
 
   def test_rename_too_many_args
+    c = cmd('set', 'foo.com', "test\nfoo\nfoo")
+    assert_equal(0, c[:exit])
+    c = cmd('rename', 'foo.com', 'bar.com', 'baz', "test\n")
+    assert_equal(1, c[:exit])
   end
 
-  def test_invalid_command
+  def test_help
+    c = cmd('help', '')
+    assert_equal(0, c[:exit])
+  end
+
+  def test_help_set
+    c = cmd('help', 'set', '')
+    assert_equal(0, c[:exit])
+  end
+
+  def test_help_fail
+    c = cmd('help', 'invalid', '')
+    assert_equal(1, c[:exit])
+  end
+
+  def test_help_too_many_args
+    c = cmd('help', 'set', 'foo', '')
+    assert_equal(1, c[:exit])
   end
 
   def test_set_alias
