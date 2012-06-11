@@ -150,6 +150,24 @@ class TestWard < Test::Unit::TestCase
     }
     ward_file.delete rescue nil
   end
+
+  def test_rename
+    created = @ward.set('foo', 'bar')
+    assert(created)
+    matches = @ward.find('foo')
+    assert_equal('bar', matches['foo'])
+    renamed = @ward.rename('foo', 'quux')
+    assert(renamed)
+    matches = @ward.find('foo')
+    assert_empty(matches)
+    matches = @ward.find('quux')
+    assert_equal('bar', matches['quux'])
+  end
+
+  def test_rename_failed
+    rename = @ward.rename('foo', 'bar')
+    assert(!rename)
+  end
 end
 
 class TestCommand < Test::Unit::TestCase
