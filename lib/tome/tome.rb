@@ -187,7 +187,11 @@ module Tome
       end
 
       if tome[:version] > FILE_VERSION
-        raise FileFormatError, "The tome database comes from a newer version of tome (#{tome[:version]} > #{FILE_VERSION}). Try updating tome."
+        raise FileFormatError, "The tome database comes from a newer version of tome (v#{tome[:version]} > v#{FILE_VERSION}). Try updating tome."
+      end
+
+      if tome[:version] < FILE_VERSION
+        raise FileFormatError, "The tome database is incompatible with this version of tome (v#{tome[:version]} < v#{FILE_VERSION})."
       end
 
       # TODO: Check version number, do file format migration if necessary.
@@ -304,6 +308,6 @@ module Tome
       readable_store { }
     end
 
-    FILE_VERSION = 1
+    FILE_VERSION = 2
   end
 end
