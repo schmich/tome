@@ -32,7 +32,9 @@ module Tome
         @err.puts "Error: #{error.message}"
         return 1
       rescue FileFormatError => error
-        @err.puts "Error: Cannot read #{@tome_filename}: #{error.message}"
+        # Fix file separators for Windows.
+        filename = @tome_filename.gsub(File::SEPARATOR, File::ALT_SEPARATOR || File::SEPARATOR)
+        @err.puts "Error: Cannot read #{filename}: #{error.message}"
         return 1
       end
 
