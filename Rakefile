@@ -50,7 +50,7 @@ end
 
 desc "Uninstall #{$gem.name} gem"
 task :uninstall do
-  sh "gem uninstall #{$gem.name} --version #{$gem.version} -x"
+  sh "gem uninstall #{$gem.name} -x"
 end
 
 desc "Build #{$gem.name} gem"
