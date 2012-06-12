@@ -58,9 +58,9 @@ module Tome
       commands = {
         /\A(help|-h|--help)\z/i => :help,
         /\A(version|ver|-v|--version)\z/i => :version,
-        /\A(set|s)\z/i => :set,
+        /\A(set|s|add)\z/i => :set,
         /\A(get|g|show)\z/i => :get,
-        /\A(delete|del|d|rm|remove)\z/i => :delete,
+        /\A(delete|del|rm|remove)\z/i => :delete,
         /\A(generate|gen)\z/i => :generate,
         /\A(copy|cp)\z/i => :copy,
         /\A(rename|ren|rn)\z/i => :rename,

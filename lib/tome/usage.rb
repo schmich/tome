@@ -83,7 +83,7 @@ Examples:
     tome set foo@gmail.com
     tome set foo@gmail.com p4ssw0rd
 
-Alias: set, s
+Alias: set, s, add
 END
 
 $get_usage = <<END
@@ -119,7 +119,7 @@ Examples:
     tome delete gmail.com
     tome delete foo@gmail.com
 
-Alias: delete, del, d, remove, rm
+Alias: delete, del, remove, rm
 END
 
 $generate_usage = <<END
