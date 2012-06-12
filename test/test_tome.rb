@@ -168,6 +168,18 @@ class TestTome < Test::Unit::TestCase
     rename = @tome.rename('foo', 'bar')
     assert(!rename)
   end
+
+  def test_master_password_nil_empty
+    tome_file = Tempfile.new('test')
+    Tome::Tome.create!(tome_file.path, 'foo', 10)
+    assert_raise(Tome::MasterPasswordError) {
+      Tome::Tome.new(tome_file.path, nil)
+    }
+    assert_raise(Tome::MasterPasswordError) {
+      Tome::Tome.new(tome_file.path, '')
+    }
+    tome_file.delete rescue nil
+  end
 end
 
 # StringIO#noecho does not appear to exist,
@@ -516,6 +528,24 @@ class TestCommand < Test::Unit::TestCase
   def test_version
     c = cmd('version', '')
     assert_equal(0, c[:exit])
+  end
+
+  def test_master_password_empty
+    c = cmd('set', 'foo.com', 'bar', '')
+    assert_equal(1, c[:exit])
+  end
+
+  def test_master_password_wrong
+    c = cmd('set', 'foo.com', 'bar', "baz\n")
+    assert_equal(1, c[:exit])
+  end
+
+  def test_master_password_wrong_right
+    c = cmd('set', 'foo.com', 'bar', "baz\ntest\n")
+    assert_equal(0, c[:exit])
+    c = cmd('get', 'foo.com', "test\n")
+    assert_equal(0, c[:exit])
+    assert(c[:out] =~ /\bbar\b/)
   end
 
   def test_set_alias
