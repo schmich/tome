@@ -513,6 +513,11 @@ class TestCommand < Test::Unit::TestCase
     assert_equal(1, c[:exit])
   end
 
+  def test_version
+    c = cmd('version', '')
+    assert_equal(0, c[:exit])
+  end
+
   def test_set_alias
   end
 
@@ -535,5 +540,8 @@ class TestCommand < Test::Unit::TestCase
   end
 
   def test_help_alias
+  end
+
+  def test_version_alias
   end
 end
