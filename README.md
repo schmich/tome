@@ -2,7 +2,7 @@
 
 Tome is a lightweight password manager with a humane command-line interface.
 
-Tome stores your passwords in a single encrypted database file which you manage with a single master password.
+Tome stores your passwords in an encrypted file which you manage with a single master password.
 You can keep track of multiple complex passwords without having to remember any of them.
 
 *Disclaimer* I am not a security expert. I've only had limited formal training in security and cryptography.
