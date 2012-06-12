@@ -170,7 +170,7 @@ module Tome
       end
 
       begin
-        store_yaml = Crypt.decrypt(
+        inflated_store_yaml = Crypt.decrypt(
           :value => tome[:store],
           :password => @master_password,
           :stretch => tome[:stretch],
@@ -184,6 +184,8 @@ module Tome
         raise MasterPasswordError
       end
 
+      store_yaml = Padding.unpad(inflated_store_yaml)
+
       store = YAML.load(store_yaml)
       return store || {}
     end
@@ -194,6 +196,7 @@ module Tome
       end
 
       store_yaml = YAML.dump(store)
+      store_yaml = Padding.pad(store_yaml, 1024, 4096)
 
       new_salt = Crypt.new_salt
       new_iv = Crypt.new_iv

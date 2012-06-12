@@ -1,4 +1,6 @@
 require 'tome/tome'
 require 'tome/command'
 require 'tome/crypt'
+require 'tome/padding'
+require 'tome/usage'
 require 'tome/version'
