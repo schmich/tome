@@ -342,7 +342,7 @@ module Tome
     def input_password
       input = proc { |stdin|
         raw = stdin.gets
-        return '' if raw.nil?
+        return nil if raw.nil?
 
         password = raw.strip
         @out.puts
@@ -394,7 +394,12 @@ module Tome
         tome = Tome.new(@tome_filename, master_password)
       rescue MasterPasswordError
         @err.puts 'Incorrect master password.'
-        retry
+
+        if master_password.nil?
+          raise CommandError, 'Authentication failed.'
+        else
+          retry
+        end
       end
 
       return tome
