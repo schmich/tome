@@ -22,7 +22,7 @@ module Tome
       @tome_filename = tome_filename
       
       if args.length < 1
-        @err.puts $usage
+        usage()
         return 1
       end
 
@@ -51,7 +51,8 @@ module Tome
 
     def command_from_arg(arg)
       commands = {
-        /\A(help|(-h)|(--help))\z/i => :help,
+        /\A(help|-h|--help)\z/i => :help,
+        /\A(version|ver|-v|--version)\z/i => :version,
         /\A(set|s)\z/i => :set,
         /\A(get|g|show)\z/i => :get,
         /\A(delete|del|d|rm|remove)\z/i => :delete,
@@ -74,7 +75,7 @@ module Tome
       end
 
       if args.empty?
-        @out.puts $usage
+        usage()
         return
       end
 
@@ -95,7 +96,16 @@ module Tome
         :list => $list_usage
       }
 
-      @out.puts help[command]
+      usage = help[command]
+      if usage.nil?
+        raise CommandError, "No help available for command: #{args[0]}."
+      end
+
+      @out.puts usage
+    end
+
+    def version(args)
+      @out.puts "tome version #{$version}"
     end
 
     def set(args)
@@ -354,6 +364,12 @@ module Tome
       end
     end
 
+    def usage
+      @err.puts "tome version #{$version}"
+      @err.puts
+      @err.puts $usage
+    end
+
     def tome_connect
       if !Tome.exists?(@tome_filename)
         raise CommandError, "Tome database does not exist. Use 'tome set' or 'tome generate' to create a password first."
@@ -425,6 +441,11 @@ Usage:
 
         Shows help for a specific command.
         Example: tome help set
+
+    tome version
+
+        Shows the version of tome.
+        Example: tome version
 END
 
 $help_usage = <<END
