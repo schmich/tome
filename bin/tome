@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require 'tome'
+tome_filename = File.join(Dir.home, '.tome')
+exit(Tome::Command.run(tome_filename, ARGV))
