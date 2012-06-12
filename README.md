@@ -1,6 +1,9 @@
 ## Tome
 
-Tome is a lightweight password manager with a humane command-line interface. It is meant to be simple and secure.
+Tome is a lightweight password manager with a humane command-line interface.
+
+Tome stores your passwords in a single encrypted database file which you manage with a single master password.
+You can keep track of multiple complex passwords without having to remember any of them.
 
 *Disclaimer* I am not a security expert. I've only had limited formal training in security and cryptography.
 Now that I've scared off all but the bravest, feel free to look [under the hood](#under-the-hood) or
@@ -9,12 +12,15 @@ at the security bits in [crypt.rb](https://github.com/schmich/tome/blob/master/l
 ## Installation
 
 * Requires [Ruby 1.9.3](http://www.ruby-lang.org/en/downloads/) or newer.
-* *Coming soon* `gem install tome`
+* `gem install tome --pre`
+* `tome` is now available on the command-line.
 
 ## Usage
 
 The first time you run `tome`, you'll be asked to create a master password for your encrypted password database.
 Any operations involving your password database will require this master password.
+
+Creating a new password is simple:
 
     > tome set linkedin.com
     Creating tome database.
@@ -24,7 +30,7 @@ Any operations involving your password database will require this master passwor
     Password (verify):
     Created password for linkedin.com.
 
-Recalling a password is easy:
+Recalling a password is just as easy:
 
     > tome get linkedin.com
     Master password:
