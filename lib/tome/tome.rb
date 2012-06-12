@@ -11,11 +11,27 @@ module Tome
     end
 
     def self.create!(tome_filename, master_password, stretch = 100_000)
+      if tome_filename.nil? || tome_filename.empty?
+        raise ArgumentError
+      end
+
+      if master_password.nil? || master_password.empty?
+        raise MasterPasswordError
+      end
+
       save_tome(tome_filename, new_tome(stretch), {}, master_password)
       return Tome.new(tome_filename, master_password)
     end
 
     def initialize(tome_filename, master_password)
+      if tome_filename.nil? || tome_filename.empty?
+        raise ArgumentError
+      end
+      
+      if master_password.nil? || master_password.empty?
+        raise MasterPasswordError
+      end
+
       @tome_filename = tome_filename
       @master_password = master_password
 
@@ -145,6 +161,10 @@ module Tome
     end
 
     def self.load_tome(tome_filename)
+      if tome_filename.nil? || tome_filename.empty?
+        raise ArgumentError
+      end
+      
       return nil if !File.exist?(tome_filename)
 
       contents = File.open(tome_filename, 'rb') { |file| file.read }
@@ -170,21 +190,18 @@ module Tome
       end
 
       begin
-        inflated_store_yaml = Crypt.decrypt(
+        padded_store_yaml = Crypt.decrypt(
           :value => tome[:store],
           :password => @master_password,
           :stretch => tome[:stretch],
           :salt => tome[:salt],
           :iv => tome[:iv]
         )
-      rescue ArgumentError
-        # TODO: Should probably be raising an error here.
-        return {}
       rescue OpenSSL::Cipher::CipherError
         raise MasterPasswordError
       end
 
-      store_yaml = Padding.unpad(inflated_store_yaml)
+      store_yaml = Padding.unpad(padded_store_yaml)
 
       store = YAML.load(store_yaml)
       return store || {}
@@ -196,13 +213,13 @@ module Tome
       end
 
       store_yaml = YAML.dump(store)
-      store_yaml = Padding.pad(store_yaml, 1024, 4096)
+      padded_store_yaml = Padding.pad(store_yaml, 1024, 4096)
 
       new_salt = Crypt.new_salt
       new_iv = Crypt.new_iv
 
       encrypted_store = Crypt.encrypt(
-        :value => store_yaml, 
+        :value => padded_store_yaml, 
         :password => master_password,
         :salt => new_salt,
         :iv => new_iv,

@@ -345,7 +345,7 @@ module Tome
         return '' if raw.nil?
 
         password = raw.strip
-        @err.puts
+        @out.puts
 
         return password
       }
