@@ -80,7 +80,7 @@ task :release => :build do
   version = $gem.version
   puts "Releasing version #{version}."
 
-  sh "git commit --allow-empty -a -m 'Release #{version}.'"
+  sh "git commit --allow-empty -a -m \"Release #{version}.\""
   sh "git tag v#{version}"
   sh 'git push origin master'
   sh "git push origin v#{version}"
