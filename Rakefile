@@ -42,7 +42,7 @@ desc "Install #{$gem.name} gem"
 task :install => :build do
   gemfile = "gem/#{$gem.gem_filename}"
   if !gemfile.nil?
-    sh "gem install #{gemfile}"
+    sh "gem install --no-ri --no-rdoc #{gemfile}"
   else
     puts 'Cound not find gem.'
   end
