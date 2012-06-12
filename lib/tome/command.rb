@@ -29,7 +29,10 @@ module Tome
       begin
         handle_command(args)
       rescue CommandError => error
-        @err.puts error.message
+        @err.puts "Error: #{error.message}"
+        return 1
+      rescue FileFormatError => error
+        @err.puts "Error: Cannot read #{@tome_filename}: #{error.message}"
         return 1
       end
 

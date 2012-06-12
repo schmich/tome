@@ -5,6 +5,9 @@ module Tome
   class MasterPasswordError < RuntimeError
   end
 
+  class FileFormatError < RuntimeError
+  end
+
   class Tome
     def self.exists?(tome_filename)
       return !load_tome(tome_filename).nil?
@@ -170,18 +173,40 @@ module Tome
       contents = File.open(tome_filename, 'rb') { |file| file.read }
       return nil if contents.length == 0
 
-      values = YAML.load(contents)
-      return nil if !values
+      tome = YAML.load(contents)
+      return nil if !tome
 
-      # TODO: Throw if these values are nil.
-      # TODO: Verify version number, raise if incompatible.
-      return {
-        :version => values[:version],
-        :salt => values[:salt],
-        :iv => values[:iv],
-        :stretch => values[:stretch],
-        :store => values[:store] 
-      }
+      validate_tome(tome)
+
+      return tome
+    end
+
+    def self.validate_tome(tome)
+      if tome[:version].nil? || tome[:version].class != Fixnum
+        raise FileFormatError, 'The tome database is invalid (missing or invalid version).'
+      end
+
+      if tome[:version] > FILE_VERSION
+        raise FileFormatError, "The tome database comes from a newer version of tome (#{tome[:version]} > #{FILE_VERSION}). Try updating tome."
+      end
+
+      # TODO: Check version number, do file format migration if necessary.
+
+      if tome[:salt].nil? || tome[:salt].class != String || tome[:salt].empty?
+        raise FileFormatError, 'The tome database is invalid (missing or invalid salt).'
+      end
+
+      if tome[:iv].nil? || tome[:iv].class != String || tome[:iv].empty?
+        raise FileFormatError, 'The tome database is invalid (missing or invalid IV).'
+      end
+
+      if tome[:stretch].nil? || tome[:stretch].class != Fixnum || tome[:stretch] < 0
+        raise FileFormatError, 'The tome database is invalid (missing or invalid key stretch).'
+      end
+
+      if tome[:store].nil? || tome[:store].class != String || tome[:store].empty?
+        raise FileFormatError, 'The tome database is invalid (missing or invalid store).'
+      end
     end
 
     def load_store(tome)
