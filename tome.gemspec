@@ -2,7 +2,7 @@ Gem::Specification.new do |s|
   s.name = 'tome'
   s.version = File.read('lib/tome/version.rb').match(/version\s*=\s*['"](.*)['"]/)[1]
   s.executables << 'tome'
-  s.date = '2012-06-12'
+  s.date = Time.now.strftime('%Y-%m-%d')
   s.summary = 'Lightweight command-line password manager.'
   s.description = 'Lightweight password manager with a humane command-line interface. Manage your passwords with a single master password.'
   s.authors = ['Chris Schmich']
