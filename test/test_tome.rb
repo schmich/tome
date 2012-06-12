@@ -1,116 +1,115 @@
-require 'ward'
-require 'command'
+require 'tome'
 require 'test/unit'
 require 'tempfile'
 require 'stringio'
 require 'clipboard'
 require 'yaml'
 
-class TestWard < Test::Unit::TestCase
+class TestTome < Test::Unit::TestCase
   def setup
-    @ward_file = Tempfile.new('test')
-    @ward = Ward.create!(@ward_file.path, 'test', 10)
+    @tome_file = Tempfile.new('test')
+    @tome = Tome::Tome.create!(@tome_file.path, 'test', 10)
   end
 
   def teardown
-    @ward_file.delete rescue nil
+    @tome_file.delete rescue nil
   end
 
   def test_set
-    created = @ward.set('foo.com', 'bar')
+    created = @tome.set('foo.com', 'bar')
     assert(created)
   end
 
   def test_set_no_id_fail
     assert_raise(ArgumentError) {
-      @ward.set(nil, 'bar')
+      @tome.set(nil, 'bar')
     }
   end
 
   def test_set_no_password_fail
     assert_raise(ArgumentError) {
-      @ward.set('foo.com', nil)
+      @tome.set('foo.com', nil)
     }
   end
 
   def test_set_find
-    @ward.set('foo.com', 'bar')
-    matches = @ward.find('foo.com')
+    @tome.set('foo.com', 'bar')
+    matches = @tome.find('foo.com')
     assert_equal('bar', matches['foo.com'])
   end
 
   def test_set_update
-    created = @ward.set('foo.com', 'bar')
+    created = @tome.set('foo.com', 'bar')
     assert(created)
-    created = @ward.set('foo.com', 'bar')
+    created = @tome.set('foo.com', 'bar')
     assert(!created)
   end
 
   def test_find_fail
-    matches = @ward.find('foo.com')
+    matches = @tome.find('foo.com')
     assert_empty(matches)
   end
 
   def test_set_find_fail
-    created = @ward.set('foo.com', 'bar')
+    created = @tome.set('foo.com', 'bar')
     assert(created)
-    matches = @ward.find('bar.com')
+    matches = @tome.find('bar.com')
     assert_empty(matches)
   end
 
   def test_set_delete
-    created = @ward.set('foo.com', 'bar')
+    created = @tome.set('foo.com', 'bar')
     assert(created)
-    deleted = @ward.delete('foo.com')
+    deleted = @tome.delete('foo.com')
     assert(deleted)
   end
 
   def test_delete_fail
-    deleted = @ward.delete('foo.com')
+    deleted = @tome.delete('foo.com')
     assert(!deleted)
   end
 
   def test_set_delete_find_fail
-    created = @ward.set('foo.com', 'bar')
+    created = @tome.set('foo.com', 'bar')
     assert(created)
-    matches = @ward.find('foo.com')
+    matches = @tome.find('foo.com')
     assert_equal('bar', matches['foo.com'])
-    deleted = @ward.delete('foo.com')
+    deleted = @tome.delete('foo.com')
     assert(deleted)
-    matches = @ward.find('foo.com')
+    matches = @tome.find('foo.com')
     assert_empty(matches)
   end
 
   def test_many_set_find
-    created = @ward.set('foo.com', 'bar')
+    created = @tome.set('foo.com', 'bar')
     assert(created)
-    created = @ward.set('baz.com', 'quux')
+    created = @tome.set('baz.com', 'quux')
     assert(created)
-    matches = @ward.find('foo.com')
+    matches = @tome.find('foo.com')
     assert_equal('bar', matches['foo.com'])
-    matches = @ward.find('baz.com')
+    matches = @tome.find('baz.com')
     assert_equal('quux', matches['baz.com'])
   end
 
   def test_find_pattern
-    created = @ward.set('foo@bar.com', 'foo')
+    created = @tome.set('foo@bar.com', 'foo')
     assert(created)
-    created = @ward.set('baz@bar.com', 'baz')
+    created = @tome.set('baz@bar.com', 'baz')
     assert(created)
-    matches = @ward.find('bar.com')
+    matches = @tome.find('bar.com')
     assert_equal('foo', matches['foo@bar.com'])
     assert_equal('baz', matches['baz@bar.com'])
   end
 
   def test_list_fail
     assert_raise(ArgumentError) {
-      @ward.each_password
+      @tome.each_password
     }
   end
 
   def test_list_empty
     count = 0
-    @ward.each_password {
+    @tome.each_password {
       count += 1
     }
 
@@ -118,55 +117,55 @@ class TestWard < Test::Unit::TestCase
   end
 
   def test_set_list
-    created = @ward.set('foo@bar.com', 'foo')
+    created = @tome.set('foo@bar.com', 'foo')
     assert(created)
-    @ward.each_password { |id, password|
+    @tome.each_password { |id, password|
       assert_equal('foo@bar.com', id)
       assert_equal('foo', password)
     }
   end
 
-  def test_ward_exist_fail
-    ward_file = Tempfile.new('test')
-    exists = Ward.exists?(ward_file.path)
+  def test_tome_exist_fail
+    tome_file = Tempfile.new('test')
+    exists = Tome::Tome.exists?(tome_file.path)
     assert(!exists)
-    ward_file.delete rescue nil
+    tome_file.delete rescue nil
   end
 
-  def test_ward_create
-    ward_file = Tempfile.new('test')
-    ward = Ward.create!(ward_file.path, 'foo', 10)
-    exists = Ward.exists?(ward_file.path)
+  def test_tome_create
+    tome_file = Tempfile.new('test')
+    tome = Tome::Tome.create!(tome_file.path, 'foo', 10)
+    exists = Tome::Tome.exists?(tome_file.path)
     assert(exists)
-    created = ward.set('bar.com', 'foo')
+    created = tome.set('bar.com', 'foo')
     assert(created)
-    ward_file.delete rescue nil
+    tome_file.delete rescue nil
   end
 
-  def test_ward_authenticate_fail
-    ward_file = Tempfile.new('test')
-    Ward.create!(ward_file.path, 'foo', 10)
-    assert_raise(MasterPasswordError) {
-      Ward.new(ward_file.path, 'bar')
+  def test_tome_authenticate_fail
+    tome_file = Tempfile.new('test')
+    Tome::Tome.create!(tome_file.path, 'foo', 10)
+    assert_raise(Tome::MasterPasswordError) {
+      Tome::Tome.new(tome_file.path, 'bar')
     }
-    ward_file.delete rescue nil
+    tome_file.delete rescue nil
   end
 
   def test_rename_find
-    created = @ward.set('foo', 'bar')
+    created = @tome.set('foo', 'bar')
     assert(created)
-    matches = @ward.find('foo')
+    matches = @tome.find('foo')
     assert_equal('bar', matches['foo'])
-    renamed = @ward.rename('foo', 'quux')
+    renamed = @tome.rename('foo', 'quux')
     assert(renamed)
-    matches = @ward.find('foo')
+    matches = @tome.find('foo')
     assert_empty(matches)
-    matches = @ward.find('quux')
+    matches = @tome.find('quux')
     assert_equal('bar', matches['quux'])
   end
 
   def test_rename_failed
-    rename = @ward.rename('foo', 'bar')
+    rename = @tome.rename('foo', 'bar')
     assert(!rename)
   end
 end
@@ -182,22 +181,22 @@ end
 
 class TestCommand < Test::Unit::TestCase
   def setup
-    @ward_file = Tempfile.new('test')
-    @ward = Ward.create!(@ward_file.path, 'test', 10)
+    @tome_file = Tempfile.new('test')
+    @tome = Tome::Tome.create!(@tome_file.path, 'test', 10)
   end
 
   def teardown
-    @ward_file.delete rescue nil
+    @tome_file.delete rescue nil
   end
 
   def cmd(*args)
-    ward_args = args[0...args.length - 1]
+    tome_args = args[0...args.length - 1]
     input = args.last
 
     stdout = StringIO.new('', 'w+')
     stderr = StringIO.new('', 'w+')
     stdin = StringIO.new(input, 'r')
-    exit = WardCommand.run(@ward_file.path, ward_args, stdout, stderr, stdin)
+    exit = Tome::Command.run(@tome_file.path, tome_args, stdout, stderr, stdin)
 
     stdout.rewind
     stderr.rewind
