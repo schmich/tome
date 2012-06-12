@@ -340,12 +340,25 @@ module Tome
     end
 
     def input_password
-      @in.noecho { |stdin|
-        password = stdin.gets.sub(/[\r\n]+\z/, '')
+      input = proc { |stdin|
+        raw = stdin.gets
+        return '' if raw.nil?
+
+        password = raw.strip
         @err.puts
 
         return password
       }
+
+      begin
+        @in.noecho { |stdin|
+          input.call stdin
+        }
+      rescue Errno::EBADF
+        # This can happen when stdin refers to a file or pipe.
+        # In this case, we ignore 'no echo' and do normal input.
+        input.call @in
+      end
     end
 
     def prompt_confirm(prompt)
