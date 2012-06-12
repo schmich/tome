@@ -60,5 +60,34 @@ task :build do
   FileUtils.mv $gem.gem_filename, 'gem'
 end
 
+desc "Release #{$gem.name} v#{$gem.version} and tag in git"
+task :release => :build do
+  if (`git` rescue nil).nil?
+    puts 'Could not run git command.'
+    exit!
+  end
+
+  if (`gem` rescue nil).nil?
+    puts 'Could not run gem command.'
+    exit!
+  end
+
+  unless (`git branch --no-color`.strip rescue '') =~ /\A*\s+master\z/
+    puts 'You must release from the master branch.'
+    exit!
+  end
+
+  version = $gem.version
+  puts "Releasing version #{version}."
+
+  sh "git commit --allow-empty -a -m 'Release #{version}.'"
+  sh "git tag v#{version}"
+  sh 'git push origin master'
+  sh "git push origin v#{version}"
+  sh "gem push gem/#{$gem.gem_filename}"
+
+  puts 'Fin.'
+end
+
 desc 'Run tests'
 task :default => :test
