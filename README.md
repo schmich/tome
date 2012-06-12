@@ -87,7 +87,7 @@ of every website you sign up with, you can use tome to help mitigate your risk a
 ## Under the hood
 
 All account and password information is stored in a single `.tome` file in the user's home directory. This file is
-YAML-formatted and stores the encrypted account and password information along with the encryption parameters.
+YAML-formatted and stores the encrypted account and password information as well as the encryption parameters.
 These encryption parameters, along with the master password, are used to decrypt the password information.
 
 Each time the `.tome` file is modified, new encryption parameters (i.e. the salt and IV) are randomly generated
