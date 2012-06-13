@@ -1,3 +1,11 @@
+PATH
+  remote: .
+  specs:
+    tome (0.1.2.pre)
+      clipboard (~> 1.0)
+      ffi (~> 1.0)
+      passgen (~> 1.0)
+
 GEM
   remote: http://rubygems.org/
   specs:
@@ -9,6 +17,4 @@ PLATFORMS
   x86-mingw32
 
 DEPENDENCIES
-  clipboard (~> 1.0)
-  ffi (~> 1.0)
-  passgen (~> 1.0)
+  tome!
