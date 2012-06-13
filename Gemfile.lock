@@ -1,0 +1,14 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    clipboard (1.0.1)
+    ffi (1.0.11)
+    passgen (1.0.2)
+
+PLATFORMS
+  x86-mingw32
+
+DEPENDENCIES
+  clipboard (~> 1.0)
+  ffi (~> 1.0)
+  passgen (~> 1.0)
