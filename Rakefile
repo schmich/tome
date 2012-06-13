@@ -7,15 +7,15 @@ class GemInfo
   end
    
   def spec
-    @spec = @spec || eval(File.read(@gemspec_filename))
+    @spec ||= eval(File.read(@gemspec_filename))
   end
 
   def name
-    @name = @name || spec.name
+    @name ||= spec.name
   end
 
   def version
-    @version = @version || spec.version.to_s
+    @version ||= spec.version.to_s
   end
 
   def gem_filename
