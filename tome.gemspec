@@ -14,6 +14,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'passgen', '~> 1.0'
   s.add_runtime_dependency 'clipboard', '~> 1.0'
   s.add_runtime_dependency 'ffi', '~> 1.0'
+  s.add_development_dependency 'rake', '>= 0.9.2.2'
   s.post_install_message = <<END
 -------------------------------
 Run 'tome help' to get started.
