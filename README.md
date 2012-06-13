@@ -9,6 +9,8 @@ You can keep track of multiple complex passwords without having to remember any 
 Now that I've scared off all but the bravest, feel free to look [under the hood](#under-the-hood) or
 at the security bits in [crypt.rb](https://github.com/schmich/tome/blob/master/lib/tome/crypt.rb).
 
+[![Build Status](https://secure.travis-ci.org/schmich/tome.png)](http://travis-ci.org/schmich/tome)
+
 ## Installation
 
 * Requires [Ruby 1.9.3](http://www.ruby-lang.org/en/downloads/) or newer.
