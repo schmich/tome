@@ -11,6 +11,7 @@ at the security bits in [crypt.rb](https://github.com/schmich/tome/blob/master/l
 
 [![Build Status](https://secure.travis-ci.org/schmich/tome.png)](http://travis-ci.org/schmich/tome)
 [![Dependency Status](https://gemnasium.com/schmich/tome.png)](http://gemnasium.com/schmich/tome)
+[![Code Quality](https://codeclimate.com/badge.png)](https://codeclimate.com/github/schmich/tome)
 
 ## Installation
 
