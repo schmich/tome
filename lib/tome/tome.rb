@@ -287,8 +287,8 @@ module Tome
 
       begin
         result = yield store
-      ensure
         Tome.save_tome(@tome_filename, tome, store, @master_password)
+      ensure
         store = nil
         GC.start
       end
