@@ -10,6 +10,7 @@ Now that I've scared off all but the bravest, feel free to look [under the hood]
 at the security bits in [crypt.rb](https://github.com/schmich/tome/blob/master/lib/tome/crypt.rb).
 
 [![Build Status](https://secure.travis-ci.org/schmich/tome.png)](http://travis-ci.org/schmich/tome)
+[![Dependency Status](https://gemnasium.com/schmich/tome.png)](http://gemnasium.com/schmich/tome)
 
 ## Installation
 
