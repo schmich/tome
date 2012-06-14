@@ -271,10 +271,12 @@ module Tome
       tome = Tome.load_tome(@tome_filename)
       store = load_store(tome)
 
-      result = yield store
-
-      store = nil
-      GC.start
+      begin
+        result = yield store
+      ensure
+        store = nil
+        GC.start
+      end
 
       return result
     end
@@ -283,12 +285,13 @@ module Tome
       tome = Tome.load_tome(@tome_filename)
       store = load_store(tome)
 
-      result = yield store
-
-      Tome.save_tome(@tome_filename, tome, store, @master_password)
-      store = nil
-
-      GC.start
+      begin
+        result = yield store
+      ensure
+        Tome.save_tome(@tome_filename, tome, store, @master_password)
+        store = nil
+        GC.start
+      end
 
       return result
     end
