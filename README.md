@@ -38,6 +38,7 @@ Recalling a password is just as easy:
 
     > tome get linkedin.com
     Master password:
+    Password for linkedin.com:
     p4ssw0rd
     
 In fact, it's even simpler than that. `tome get` does substring pattern matching to recall a password,
@@ -45,6 +46,7 @@ so this works, too:
 
     > tome get linked
     Master password:
+    Password for linkedin.com:
     p4ssw0rd
 
 You can also generate and copy complex passwords without having to remember anything:
