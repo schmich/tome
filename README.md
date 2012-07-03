@@ -15,9 +15,9 @@ at the security bits in [crypt.rb](https://github.com/schmich/tome/blob/master/l
 
 ## Installation
 
-* Requires [Ruby 1.9.3](http://www.ruby-lang.org/en/downloads/) or newer.
-* `gem install tome --pre`
-* `tome` is now available on the command-line.
+* Install [Ruby 1.9.3](http://www.ruby-lang.org/en/downloads/) or newer.
+* `gem install tome`
+* `tome` should now be available on the command-line. Run `tome help` to get started.
 
 ## Usage
 
@@ -115,11 +115,3 @@ and used for encryption.
    from [SecureRandom#uuid](http://www.ruby-doc.org/stdlib-1.9.3/libdoc/securerandom/rdoc/SecureRandom.html#method-c-uuid).
  * Randomly-generated [IV](http://en.wikipedia.org/wiki/Initialization_vector) from [OpenSSL::Cipher#random_iv](http://www.ruby-doc.org/stdlib-1.9.3/libdoc/openssl/rdoc/OpenSSL/Cipher.html#method-i-random_iv).
  * 100,000 [key stretch](http://en.wikipedia.org/wiki/Key_stretching) iterations.
-
-## Contributing
-
-*TODO*
-
-## License
-
-*TODO*
