@@ -77,6 +77,13 @@ task :release => :build do
     exit!
   end
 
+  print "Do you want to release #{$gem.name} v#{$gem.version} and tag it in git (y/n)? "
+  response = $stdin.gets.strip
+  unless response =~ /\Ay/
+    puts 'Aborting.'
+    exit!
+  end
+
   version = $gem.version
   puts "Releasing version #{version}."
 
