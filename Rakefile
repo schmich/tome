@@ -44,7 +44,7 @@ task :install => :build do
   if !gemfile.nil?
     sh "gem install --no-ri --no-rdoc #{gemfile}"
   else
-    puts 'Cound not find gem.'
+    puts 'Could not find gem.'
   end
 end
 
