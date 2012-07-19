@@ -44,7 +44,7 @@ task :install => :build do
   if !gemfile.nil?
     sh "gem install --no-ri --no-rdoc #{gemfile}"
   else
-    puts 'Cound not find gem.'
+    puts 'Could not find gem.'
   end
 end
 
@@ -74,6 +74,13 @@ task :release => :build do
 
   unless (`git branch --no-color`.strip rescue '') =~ /\A*\s+master\z/
     puts 'You must release from the master branch.'
+    exit!
+  end
+
+  print "Do you want to release #{$gem.name} v#{$gem.version} and tag it in git (y/n)? "
+  response = $stdin.gets.strip
+  unless response =~ /\Ay/
+    puts 'Aborting.'
     exit!
   end
 

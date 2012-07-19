@@ -10,12 +10,14 @@ Now that I've scared off all but the bravest, feel free to look [under the hood]
 at the security bits in [crypt.rb](https://github.com/schmich/tome/blob/master/lib/tome/crypt.rb).
 
 [![Build Status](https://secure.travis-ci.org/schmich/tome.png)](http://travis-ci.org/schmich/tome)
+[![Dependency Status](https://gemnasium.com/schmich/tome.png)](http://gemnasium.com/schmich/tome)
+[![Code Quality](https://codeclimate.com/badge.png)](https://codeclimate.com/github/schmich/tome)
 
 ## Installation
 
-* Requires [Ruby 1.9.3](http://www.ruby-lang.org/en/downloads/) or newer.
-* `gem install tome --pre`
-* `tome` is now available on the command-line.
+* Install [Ruby 1.9.3](http://www.ruby-lang.org/en/downloads/) or newer.
+* `gem install tome`
+* `tome` should now be available on the command-line. Run `tome help` to get started.
 
 ## Usage
 
@@ -36,6 +38,7 @@ Recalling a password is just as easy:
 
     > tome get linkedin.com
     Master password:
+    Password for linkedin.com:
     p4ssw0rd
     
 In fact, it's even simpler than that. `tome get` does substring pattern matching to recall a password,
@@ -43,6 +46,7 @@ so this works, too:
 
     > tome get linked
     Master password:
+    Password for linkedin.com:
     p4ssw0rd
 
 You can also generate and copy complex passwords without having to remember anything:
@@ -111,11 +115,3 @@ and used for encryption.
    from [SecureRandom#uuid](http://www.ruby-doc.org/stdlib-1.9.3/libdoc/securerandom/rdoc/SecureRandom.html#method-c-uuid).
  * Randomly-generated [IV](http://en.wikipedia.org/wiki/Initialization_vector) from [OpenSSL::Cipher#random_iv](http://www.ruby-doc.org/stdlib-1.9.3/libdoc/openssl/rdoc/OpenSSL/Cipher.html#method-i-random_iv).
  * 100,000 [key stretch](http://en.wikipedia.org/wiki/Key_stretching) iterations.
-
-## Contributing
-
-*TODO*
-
-## License
-
-*TODO*
