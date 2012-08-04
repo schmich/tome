@@ -105,6 +105,13 @@ module Tome
       end 
     end
 
+    def master_password=(master_password)
+      return writable_store do |store|
+        @master_password = master_password
+        true
+      end
+    end
+
   private
     def set_by_id(store, id, password)
       created = !store.include?(id)

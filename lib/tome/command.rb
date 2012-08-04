@@ -64,6 +64,7 @@ module Tome
         /\A(generate|gen)\z/i => :generate,
         /\A(copy|cp)\z/i => :copy,
         /\A(rename|ren|rn)\z/i => :rename,
+        /\A(master)\z/i => :master,
         /\A(list|ls)\z/i => :list
       }
 
@@ -98,6 +99,7 @@ module Tome
         :generate => $generate_usage,
         :copy => $copy_usage,
         :rename => $rename_usage,
+        :master => $master_usage,
         :list => $list_usage
       }
 
@@ -118,7 +120,7 @@ module Tome
         raise CommandError, "Invalid arguments.\n\n#{$set_usage}"
       end
       
-      tome = tome_create_connect()
+      created, tome = tome_create_connect()
 
       case args.length
         # TODO: Validate that first argument is in [username@]domain form.
@@ -213,7 +215,7 @@ module Tome
         raise CommandError, "Invalid arguments.\n\n#{$generate_usage}"
       end
       
-      tome = tome_create_connect()
+      created, tome = tome_create_connect()
 
       # tome gen bar.com
       # tome gen foo@bar.com
@@ -316,6 +318,20 @@ module Tome
       end
     end
 
+    def master(args)
+      if args.count > 0
+        raise CommandError, "Invalid arguments.\n\n#{$master_usage}"
+      end
+
+      created, tome = tome_create_connect()
+
+      if !created
+        master_password = prompt_password('New master password')
+        tome.master_password = master_password
+        @out.puts 'Master password updated.'
+      end
+    end
+
     def generate_password
       Passgen.generate(:length => 30, :symbols => true)
     end
@@ -414,9 +430,9 @@ module Tome
       if !Tome.exists?(@tome_filename)
         @out.puts 'Creating tome database.'
         master_password = prompt_password('Master password')
-        tome = Tome.create!(@tome_filename, master_password)
+        return true, Tome.create!(@tome_filename, master_password)
       else
-        tome = tome_connect()
+        return false, tome_connect()
       end
     end
   end
