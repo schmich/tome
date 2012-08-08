@@ -171,14 +171,37 @@ class TestTome < Test::Unit::TestCase
 
   def test_master_password_nil_empty
     tome_file = Tempfile.new('test')
-    Tome::Tome.create!(tome_file.path, 'foo', 10)
-    assert_raise(Tome::MasterPasswordError) {
-      Tome::Tome.new(tome_file.path, nil)
-    }
-    assert_raise(Tome::MasterPasswordError) {
-      Tome::Tome.new(tome_file.path, '')
-    }
-    tome_file.delete rescue nil
+    begin
+      Tome::Tome.create!(tome_file.path, 'foo', 10)
+      assert_raise(Tome::MasterPasswordError) {
+        Tome::Tome.new(tome_file.path, nil)
+      }
+      assert_raise(Tome::MasterPasswordError) {
+        Tome::Tome.new(tome_file.path, '')
+      }
+    ensure
+      tome_file.delete rescue nil
+    end
+  end
+
+  def test_master_password_change
+    begin
+      tome_file = Tempfile.new('test')
+      tome_foo = Tome::Tome.create!(tome_file.path, 'foo', 10)
+      created = tome_foo.set('foo@bar.com', 'baz')
+      assert(created)
+
+      tome_foo.master_password = 'bar'
+      assert_raise(Tome::MasterPasswordError) {
+        Tome::Tome.new(tome_file.path, 'foo')
+      }
+
+      tome_bar = Tome::Tome.new(tome_file.path, 'bar')
+      matches = tome_bar.find('foo@bar.com')
+      assert_equal('baz', matches['foo@bar.com'])
+    ensure
+      tome_file.delete rescue nil
+    end
   end
 
   def test_master_password_wrong_regression
@@ -553,6 +576,25 @@ class TestCommand < Test::Unit::TestCase
     c = cmd('get', 'foo.com', "test\n")
     assert_equal(0, c[:exit])
     assert(c[:out] =~ /\bbar\b/)
+  end
+
+  def test_master_too_many_args
+    c = cmd('master', 'foo', '')
+    assert_equal(1, c[:exit])
+  end
+
+  def test_master_change
+    c = cmd('set', 'foo.com', 'bar', "test\n")
+    assert_equal(0, c[:exit])
+    c = cmd('master', "test\nwaldo\nwaldo\n")
+    assert_equal(0, c[:exit])
+    c = cmd('set', 'baz.com', 'quux', "test\n")
+    assert_equal(1, c[:exit])
+    c = cmd('set', 'baz.com', 'quux', "waldo\n")
+    assert_equal(0, c[:exit])
+    c = cmd('get', 'baz.com', "waldo\n")
+    assert_equal(0, c[:exit])
+    assert(c[:out] =~ /\bquux\b/)
   end
 
   def test_set_alias

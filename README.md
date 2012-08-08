@@ -94,13 +94,17 @@ of every website you sign up with, you can use tome to help mitigate your risk a
   computing power and time. To further reduce risk, don't store usernames (e.g. do `tome set gmail.com` instead of `tome set foo@gmail.com`).
 * Dependence on the `.tome` file: if your `.tome` file is lost or corrupt and you forget your passwords, you'll have to reset them.
 * If you want access to your passwords on multiple machines, you'll have to sync the `.tome` file between machines.
-* Trust in *my* secure coding practices: I encourage you to look at the source yourself.
+* Trust in *my* secure coding practices. I encourage you to look at the source yourself.
 
 ## Under the hood
 
 All account and password information is stored in a single `.tome` file in the user's home directory. This file is
 YAML-formatted and stores the encrypted account and password information as well as the encryption parameters.
 These encryption parameters, along with the master password, are used to decrypt the password information.
+
+A randomly-generated 1K-4K block of data is appended to the actual password data to obfuscate the number of passwords
+stored in the database. This is not a security mechanism, but rather a hindrance to attempts to infer
+anything from the encrypted data.
 
 Each time the `.tome` file is modified, new encryption parameters (i.e. the salt and IV) are randomly generated
 and used for encryption.

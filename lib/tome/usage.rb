@@ -36,6 +36,11 @@ Usage:
         Rename the account information stored.
         Example: tome rename twitter.com foo@twitter.com
 
+    tome master
+
+        Set the master password.
+        Example: tome master
+
     tome help
 
         Shows help for a specific command.
@@ -190,4 +195,14 @@ Examples:
     tome rename foo@gmail.com bar@gmail.com
 
 Alias: rename, ren, rn
+END
+
+$master_usage = <<END
+tome master
+
+    Set the master password.
+
+Usage:
+
+    tome master
 END
