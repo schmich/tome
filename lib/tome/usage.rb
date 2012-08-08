@@ -8,7 +8,7 @@ Usage:
 
     tome generate [user@]<domain>
 
-        Generate a random password for an account.
+        Generate and copy a random password for an account.
         Example: tome generate reddit.com
 
     tome get <pattern>
@@ -131,6 +131,7 @@ $generate_usage = <<END
 tome generate
 
     Generate a random password for an account. The user is optional.
+    The generated password is copied to the clipboard.
 
 Usage:
 

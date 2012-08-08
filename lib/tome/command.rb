@@ -231,11 +231,12 @@ module Tome
       end
 
       created = tome.set(id, password)
+      Clipboard.copy(password)
 
       if created
-        @out.puts "Generated password for #{id}."
+        @out.puts "Generated and copied password for #{id}."
       else
-        @out.puts "Updated #{id} with the generated password."
+        @out.puts "Updated and copied password for #{id}."
       end
     end
 
@@ -264,7 +265,7 @@ module Tome
         match = matches.first
         password = match.last
 
-        Clipboard.copy password
+        Clipboard.copy(password)
         if Clipboard.paste == password
           @out.puts "Password for #{match.first} copied to clipboard."
         else

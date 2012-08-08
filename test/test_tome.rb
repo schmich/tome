@@ -308,6 +308,7 @@ class TestCommand < Test::Unit::TestCase
     assert_equal(0, c[:exit])
     c = cmd('get', 'foo.com', "test\n")
     assert_equal(0, c[:exit])
+    assert(!c[:out][Clipboard.paste].nil?)
   end
 
   def test_generate_overwrite_abort
@@ -318,6 +319,7 @@ class TestCommand < Test::Unit::TestCase
     c = cmd('get', 'foo.com', "test\n")
     assert_equal(0, c[:exit])
     assert(c[:out] =~ /\bfoo\b/)
+    assert(c[:out][Clipboard.paste].nil?)
   end
 
   def test_generate_overwrite_confirm
@@ -328,6 +330,7 @@ class TestCommand < Test::Unit::TestCase
     c = cmd('get', 'foo.com', "test\n")
     assert_equal(0, c[:exit])
     assert(c[:out] !=~ /\bImprobableString\b/)
+    assert(!c[:out][Clipboard.paste].nil?)
   end
 
   def test_generate_too_few_args
