@@ -180,6 +180,13 @@ class TestTome < Test::Unit::TestCase
     }
     tome_file.delete rescue nil
   end
+
+  def test_master_password_wrong_regression
+    file = File.join(File.dirname(__FILE__), 'data', 'test_master_password_wrong_regression.tome')
+    assert_raise(Tome::MasterPasswordError) {
+      Tome::Tome.new(file, 'baz')
+    }
+  end
 end
 
 # StringIO#noecho does not appear to exist,

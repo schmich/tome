@@ -230,7 +230,11 @@ module Tome
         raise MasterPasswordError
       end
 
-      store_yaml = Padding.unpad(padded_store_yaml)
+      begin
+        store_yaml = Padding.unpad(padded_store_yaml)
+      rescue Exception
+        raise MasterPasswordError
+      end
 
       store = YAML.load(store_yaml)
       return store || {}
