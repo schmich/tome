@@ -53,7 +53,7 @@ You can also generate and copy complex passwords without having to remember anyt
 
     > tome generate last.fm
     Master password:
-    Generated password for last.fm.
+    Generated and copied password for last.fm.
 
     > tome get last
     Master password:
