@@ -255,9 +255,9 @@ module Tome
       if matches.empty?
         raise CommandError, "No password found for #{pattern}."
       elsif matches.count > 1
-        message = "Found multiple matches for #{pattern}. Did you mean one of the following?\n\n"
-        error.matches.each { |match|
-          message += "\t#{match}\n"
+        message = "Found multiple matches for \"#{pattern}\":\n\n"
+        matches.each { |match|
+          message += "\t#{match[0]}: #{match[1]}\n"
         }
 
         raise CommandError, message
