@@ -119,3 +119,9 @@ and used for encryption.
    from [SecureRandom#uuid](http://www.ruby-doc.org/stdlib-1.9.3/libdoc/securerandom/rdoc/SecureRandom.html#method-c-uuid).
  * Randomly-generated [IV](http://en.wikipedia.org/wiki/Initialization_vector) from [OpenSSL::Cipher#random_iv](http://www.ruby-doc.org/stdlib-1.9.3/libdoc/openssl/rdoc/OpenSSL/Cipher.html#method-i-random_iv).
  * 100,000 [key stretch](http://en.wikipedia.org/wiki/Key_stretching) iterations.
+
+## License
+
+Copyright &copy; 2013 Chris Schmich
+<br />
+MIT License, see LICENSE for details.
