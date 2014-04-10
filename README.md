@@ -9,9 +9,10 @@ You can keep track of multiple complex passwords without having to remember any 
 Now that I've scared off all but the bravest, feel free to look [under the hood](#under-the-hood) or
 at the security bits in [crypt.rb](https://github.com/schmich/tome/blob/master/lib/tome/crypt.rb).
 
-[![Build Status](https://secure.travis-ci.org/schmich/tome.png)](http://travis-ci.org/schmich/tome)
-[![Dependency Status](https://gemnasium.com/schmich/tome.png)](http://gemnasium.com/schmich/tome)
-[![Code Quality](https://codeclimate.com/badge.png)](https://codeclimate.com/github/schmich/tome)
+[![Gem Version](https://badge.fury.io/rb/tome.svg)](http://rubygems.org/gems/tome)
+[![Build Status](https://secure.travis-ci.org/schmich/tome.svg)](http://travis-ci.org/schmich/tome)
+[![Dependency Status](https://gemnasium.com/schmich/tome.svg)](http://gemnasium.com/schmich/tome)
+[![Code Quality](http://img.shields.io/codeclimate/github/schmich/tome.svg)](https://codeclimate.com/github/schmich/tome)
 
 ## Installation
 
