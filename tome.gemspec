@@ -1,6 +1,8 @@
+require File.expand_path('lib/tome/version.rb', File.dirname(__FILE__))
+
 Gem::Specification.new do |s|
   s.name = 'tome'
-  s.version = eval(File.read('lib/tome/version.rb'))
+  s.version = Tome::VERSION
   s.executables << 'tome'
   s.date = Time.now.strftime('%Y-%m-%d')
   s.summary = 'Lightweight command-line password manager.'

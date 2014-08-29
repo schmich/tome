@@ -112,7 +112,7 @@ module Tome
     end
 
     def version(args)
-      @out.puts "tome version #{$version}"
+      @out.puts "tome version #{VERSION}"
     end
 
     def set(args)
@@ -420,7 +420,7 @@ module Tome
     end
 
     def usage
-      @err.puts "tome version #{$version}"
+      @err.puts "tome version #{VERSION}"
       @err.puts
       @err.puts $usage
     end
