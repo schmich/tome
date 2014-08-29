@@ -255,22 +255,42 @@ module Tome
       if matches.empty?
         raise CommandError, "No password found for #{pattern}."
       elsif matches.count > 1
-        message = "Found multiple matches for \"#{pattern}\":\n\n"
-        matches.each { |match|
-          message += "\t#{match[0]}: #{match[1]}\n"
-        }
-
-        raise CommandError, message
+        match = pick_match(pattern, matches)
       else
         match = matches.first
-        password = match.last
+      end
 
-        Clipboard.copy(password)
-        if Clipboard.paste == password
-          @out.puts "Password for #{match.first} copied to clipboard."
-        else
-          @err.puts "Failed to copy password for #{match.first} to clipboard."
+      name = match.first
+      password = match.last
+
+      Clipboard.copy(password)
+      if Clipboard.paste == password
+        @out.puts "Password for #{name} copied to clipboard."
+      else
+        @err.puts "Failed to copy password for #{name} to clipboard."
+      end
+    end
+
+    def pick_match(pattern, matches)
+      matches = matches.to_a
+
+      @out.puts "Found multiple matches for \"#{pattern}\":\n\n"
+      matches.each_with_index { |match, i|
+        @out.puts "\t#{i + 1}: #{match[0]}"
+      }
+
+      begin
+        @out.print "\n> "
+
+        index = @in.gets.to_i
+        if index <= 0 || index > matches.length
+          @out.puts 'Invalid option.'
+          raise
         end
+
+        return matches[index - 1]
+      rescue
+        retry
       end
     end
 

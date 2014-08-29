@@ -416,11 +416,11 @@ class TestCommand < Test::Unit::TestCase
   end
 
   def test_copy_multi
-    c = cmd('set', 'a@foo.com', "afoo\nabar\nabar")
+    c = cmd('set', 'a@foo.com', "test\nabar\nabar")
     assert_equal(0, c[:exit])
-    c = cmd('set', 'b@foo.com', "bfoo\nbbar\nbbar")
+    c = cmd('set', 'b@foo.com', "test\nbbar\nbbar")
     assert_equal(0, c[:exit])
-    c = cmd('copy', 'foo.com', "1\n")
+    c = cmd('copy', 'foo.com', "test\n1\n")
     assert_equal(0, c[:exit])
   end
 
