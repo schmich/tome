@@ -415,6 +415,15 @@ class TestCommand < Test::Unit::TestCase
     assert_equal('baz', Clipboard.paste)
   end
 
+  def test_copy_multi
+    c = cmd('set', 'a@foo.com', "afoo\nabar\nabar")
+    assert_equal(0, c[:exit])
+    c = cmd('set', 'b@foo.com', "bfoo\nbbar\nbbar")
+    assert_equal(0, c[:exit])
+    c = cmd('copy', 'foo.com', "1\n")
+    assert_equal(0, c[:exit])
+  end
+
   def test_list_empty
     c = cmd('list', "test\n")
     assert_equal(0, c[:exit])
