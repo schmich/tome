@@ -10,6 +10,7 @@ Gem::Specification.new do |s|
   s.files = Dir['{lib}/**/*.rb', 'bin/*', '*.md']
   s.require_path = 'lib'
   s.homepage = 'https://github.com/schmich/tome'
+  s.license = 'MIT'
   s.required_ruby_version = '>= 1.9.3'
   s.add_runtime_dependency 'passgen', '~> 1.0'
   s.add_runtime_dependency 'clipboard', '~> 1.0'
