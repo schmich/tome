@@ -123,6 +123,6 @@ and used for encryption.
 
 ## License
 
-Copyright &copy; 2013 Chris Schmich
+Copyright &copy; 2013-2014 Chris Schmich
 <br />
 MIT License, see LICENSE for details.
